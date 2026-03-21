@@ -1,6 +1,7 @@
 const SCENARIOS = {
-  pessimistic: { label: 'Pessimistic', grossMo: 6000, compRate: 0.65 },
-  realistic:   { label: 'Realistic',   grossMo: 12000, compRate: 0.65 }
+  pessimistic: { label: 'Pessimistic', grossMo: 6000,  compRate: 0.65 },
+  mid:         { label: 'Mid',         grossMo: 10000, compRate: 0.65 },
+  optimistic:  { label: 'Optimistic',  grossMo: 15000, compRate: 0.65 }
 };
 
 const EXPENSES_MO = 8269;
@@ -19,15 +20,21 @@ function getMonths() {
 // Month index (0-based from Apr 2026) when 59½ is reached: Dec 2038 = month 152
 const UNLOCK_MONTH_401K = 152; // (2038-2026)*12 + (12-4) = 152
 
+// Roth Conversion Ladder config
+const ROTH_LADDER_ANNUAL = 50000; // Annual conversion from Trad IRA → Roth
+const ROTH_LADDER_START_MONTH = 0; // Start converting immediately (Apr 2026)
+const ROTH_LADDER_SEASONING = 60;  // 5 years until accessible
+
 const SOURCES = [
   { key: 'academy',      label: "Owner's Comp",        color: '#22c55e', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'beyondsoft',   label: 'Beyondsoft Final',    color: '#14b8a6', initial: 4000,   growth: 0,     maxDraw: 4000 },
   { key: 'hsa',          label: 'HSA Reimbursements',  color: '#3b82f6', initial: 56497,  growth: 0.07,  maxDraw: 50000 },
   { key: 'rothContrib',  label: 'Roth Contributions',  color: '#a855f7', initial: 34500,  growth: 0.07,  maxDraw: Infinity },
   { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 134388, growth: 0,     maxDraw: Infinity },
-  { key: 'rothEarnings', label: 'Roth Earnings (59½)', color: '#c084fc', initial: 305254, growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K },
+  { key: 'rothLadder',   label: 'Roth Ladder',         color: '#06b6d4', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'family',       label: 'Family FZROX',        color: '#eab308', initial: 20900,  growth: 0.07,  maxDraw: Infinity },
   { key: 'emergency',    label: 'Emergency Fund',      color: '#ef4444', initial: 60000,  growth: 0.04,  maxDraw: Infinity },
+  { key: 'rothEarnings', label: 'Roth Earnings (59½)', color: '#c084fc', initial: 305254, growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K },
   { key: 'trad401k',     label: 'Pre-Tax 401K (59½)',  color: '#ec4899', initial: 391463, growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K }
 ];
 
@@ -44,6 +51,9 @@ function simulate(scenarioKey) {
   SOURCES.forEach(s => { bal[s.key] = s.initial; });
   let hsaTotalDrawn = 0;
 
+  // Track Roth ladder conversions: array of { month, amount }
+  const ladderConversions = [];
+
   const rows = [];
   const balHistory = [];
 
@@ -57,6 +67,20 @@ function simulate(scenarioKey) {
     SOURCES.forEach(s => {
       if (s.growth > 0 && s.key !== 'academy' && s.key !== 'beyondsoft') {
         bal[s.key] *= (1 + s.growth / 12);
+      }
+    });
+
+    // Roth conversion ladder: convert annually (every 12 months) from trad401k
+    if (m >= ROTH_LADDER_START_MONTH && m % 12 === 0 && bal.trad401k > 0) {
+      const convertAmt = Math.min(ROTH_LADDER_ANNUAL, bal.trad401k);
+      bal.trad401k -= convertAmt;
+      ladderConversions.push({ month: m, amount: convertAmt });
+    }
+
+    // Credit seasoned ladder conversions to rothLadder balance
+    ladderConversions.forEach(c => {
+      if (m === c.month + ROTH_LADDER_SEASONING && c.amount > 0) {
+        bal.rothLadder += c.amount;
       }
     });
 
@@ -79,7 +103,7 @@ function simulate(scenarioKey) {
     }
 
     // 3-7. Remaining sources (respect unlock dates)
-    const drawOrder = ['hsa', 'rothContrib', 'rothRollover', 'family', 'emergency', 'rothEarnings', 'trad401k'];
+    const drawOrder = ['hsa', 'rothContrib', 'rothRollover', 'rothLadder', 'family', 'emergency', 'rothEarnings', 'trad401k'];
     for (const key of drawOrder) {
       if (remaining <= 0) break;
       const src = SOURCES.find(s => s.key === key);
@@ -105,6 +129,7 @@ function simulate(scenarioKey) {
       hsa: bal.hsa,
       rothContrib: bal.rothContrib,
       rothRollover: bal.rothRollover,
+      rothLadder: bal.rothLadder,
       rothEarnings: bal.rothEarnings,
       family: bal.family,
       emergency: bal.emergency,
@@ -119,7 +144,7 @@ function simulate(scenarioKey) {
 
   // Find depletion months for each source
   const depletions = {};
-  ['hsa', 'rothContrib', 'rothRollover', 'rothEarnings', 'family', 'emergency', 'trad401k'].forEach(key => {
+  ['hsa', 'rothContrib', 'rothRollover', 'rothLadder', 'rothEarnings', 'family', 'emergency', 'trad401k'].forEach(key => {
     const idx = rows.findIndex(r => {
       if (key === 'hsa') return balHistory[rows.indexOf(r)].hsaDrawn >= 50000;
       return balHistory[rows.indexOf(r)][key] < 1;
@@ -144,6 +169,7 @@ function renderSummary(data) {
     <div class="card"><div class="label">HSA Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.hsa}</div></div>
     <div class="card"><div class="label">Roth Contrib Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.rothContrib}</div></div>
     <div class="card"><div class="label">Roth Rollover Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.rothRollover}</div></div>
+    <div class="card"><div class="label">Roth Ladder Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.rothLadder}</div></div>
     <div class="card"><div class="label">Roth Earnings Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.rothEarnings}</div></div>
     <div class="card"><div class="label">Emergency Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.emergency}</div></div>
     <div class="card"><div class="label">401K Unlocks (59½)</div><div class="value" style="font-size:1.1rem">2038-12</div></div>
@@ -212,6 +238,7 @@ function renderBalanceChart(data) {
     { key: 'hsa',          label: 'HSA',               color: '#3b82f6' },
     { key: 'rothContrib',  label: 'Roth Contributions', color: '#a855f7' },
     { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316' },
+    { key: 'rothLadder',   label: 'Roth Ladder',        color: '#06b6d4' },
     { key: 'rothEarnings', label: 'Roth Earnings',      color: '#c084fc' },
     { key: 'family',       label: 'Family FZROX',       color: '#eab308' },
     { key: 'emergency',    label: 'Emergency Fund',     color: '#ef4444' },
@@ -290,7 +317,7 @@ function renderTable(data) {
   const srcKeys = SOURCES.map(s => s.key);
   let html = '<table><thead><tr><th>Period</th><th>Expenses</th><th>Academy</th>';
   html += '<th>Beyondsoft</th><th>HSA</th><th>Roth Contrib</th><th>Roth Rollover</th>';
-  html += '<th>Roth Earnings</th><th>Family</th><th>Emergency</th><th>Pre-Tax 401K</th><th>Gap</th></tr></thead><tbody>';
+  html += '<th>Roth Ladder</th><th>Roth Earnings</th><th>Family</th><th>Emergency</th><th>Pre-Tax 401K</th><th>Gap</th></tr></thead><tbody>';
 
   data.rows.forEach((r, i) => {
     // Show monthly for first 24, then quarterly

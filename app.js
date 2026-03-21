@@ -377,6 +377,75 @@ function setScenario(key) {
   renderTable(data);
 }
 
+// Draw order stacked bar chart
+(function renderDrawOrder() {
+  const ctx = document.getElementById('drawOrderChart');
+  if (!ctx) return;
+  // Bottom to top: academy first (always), then draw order sources
+  const sources = [
+    { label: '.NET Academy',       value: 1, color: '#22c55e' },
+    { label: 'Beyondsoft',         value: 1, color: '#14b8a6' },
+    { label: 'HSA',                value: 1, color: '#3b82f6' },
+    { label: 'Roth Contributions', value: 1, color: '#a855f7' },
+    { label: 'Roth Rollover',      value: 1, color: '#f97316' },
+    { label: 'Roth Ladder',        value: 1, color: '#06b6d4' },
+    { label: 'Family FZROX',       value: 1, color: '#eab308' },
+    { label: 'Emergency Fund',     value: 1, color: '#ef4444' },
+    { label: 'Pre-Tax 401K (59½)', value: 1, color: '#ec4899' },
+  ];
+  const datasets = sources.map(s => ({
+    label: s.label,
+    data: [s.value],
+    backgroundColor: s.color,
+    borderWidth: 0,
+    barPercentage: 0.6
+  }));
+  new Chart(ctx, {
+    type: 'bar',
+    data: { labels: [''], datasets },
+    options: {
+      responsive: true,
+      indexAxis: 'x',
+      scales: {
+        x: { display: false },
+        y: { display: false, stacked: true }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: () => 'Draw Order',
+            label: ctx => {
+              const order = ctx.datasetIndex + 1;
+              return `${order}. ${ctx.dataset.label}`;
+            }
+          }
+        }
+      }
+    },
+    plugins: [{
+      id: 'drawOrderLabels',
+      afterDraw(chart) {
+        const { ctx: c } = chart;
+        c.save();
+        c.font = '12px sans-serif';
+        c.textAlign = 'left';
+        chart.data.datasets.forEach((ds, i) => {
+          const meta = chart.getDatasetMeta(i);
+          const bar = meta.data[0];
+          if (!bar) return;
+          const y = bar.y;
+          const x = bar.x + bar.width / 2 + 10;
+          c.fillStyle = '#ccc';
+          const arrow = i === 0 ? '→ ' : i === chart.data.datasets.length - 1 ? '→ ' : '→ ';
+          c.fillText(`${i + 1}. ${ds.label}`, x, y + 4);
+        });
+        c.restore();
+      }
+    }]
+  });
+})();
+
 // Expense breakdown pie chart
 (function renderExpensePie() {
   const ctx = document.getElementById('expenseChart');

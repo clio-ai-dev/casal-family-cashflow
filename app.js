@@ -463,11 +463,21 @@ function renderDrawOrder(data) {
   };
   const legend = document.getElementById('drawOrderLegend');
   if (legend) {
-    legend.innerHTML = sourceOrder.map((s, i) => {
-      const t = totals[s.key];
-      if (t === 0) return '';
-      return `<div class="legend-item"><span class="dot" style="background:${s.color}"></span><strong>${s.label}</strong> — ${sourceDescs[s.key]}</div>`;
-    }).join('');
+    const items = sourceOrder.filter(s => totals[s.key] > 0);
+    const half = Math.ceil(items.length / 2);
+    const leftItems = items.slice(0, half);
+    const rightItems = items.slice(half);
+    let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px">';
+    for (let i = 0; i < half; i++) {
+      const l = leftItems[i];
+      if (l) html += `<div class="legend-item"><span class="dot" style="background:${l.color}"></span><strong>${l.label}</strong> — ${sourceDescs[l.key]}</div>`;
+      else html += '<div></div>';
+      const r = rightItems[i];
+      if (r) html += `<div class="legend-item"><span class="dot" style="background:${r.color}"></span><strong>${r.label}</strong> — ${sourceDescs[r.key]}</div>`;
+      else html += '<div></div>';
+    }
+    html += '</div>';
+    legend.innerHTML = html;
   }
 }
 

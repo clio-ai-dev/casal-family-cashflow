@@ -377,48 +377,46 @@ function setScenario(key) {
   renderTable(data);
 }
 
-// Draw order stacked bar chart
+// Draw order stacked bar chart — single horizontal bar
 (function renderDrawOrder() {
   const ctx = document.getElementById('drawOrderChart');
   if (!ctx) return;
-  // Bottom to top: academy first (always), then draw order sources
   const sources = [
-    { label: '.NET Academy',       value: 1, color: '#22c55e' },
-    { label: 'Beyondsoft',         value: 1, color: '#14b8a6' },
-    { label: 'HSA',                value: 1, color: '#3b82f6' },
-    { label: 'Roth Contributions', value: 1, color: '#a855f7' },
-    { label: 'Roth Rollover',      value: 1, color: '#f97316' },
-    { label: 'Roth Ladder',        value: 1, color: '#06b6d4' },
-    { label: 'Family FZROX',       value: 1, color: '#eab308' },
-    { label: 'Emergency Fund',     value: 1, color: '#ef4444' },
-    { label: 'Pre-Tax 401K (59½)', value: 1, color: '#ec4899' },
+    { label: '1. .NET Academy',       color: '#22c55e' },
+    { label: '2. Beyondsoft',         color: '#14b8a6' },
+    { label: '3. HSA',                color: '#3b82f6' },
+    { label: '4. Roth Contributions', color: '#a855f7' },
+    { label: '5. Roth Rollover',      color: '#f97316' },
+    { label: '6. Roth Ladder',        color: '#06b6d4' },
+    { label: '7. Family FZROX',       color: '#eab308' },
+    { label: '8. Emergency Fund',     color: '#ef4444' },
+    { label: '9. Pre-Tax 401K (59½)', color: '#ec4899' },
   ];
-  const datasets = sources.map(s => ({
-    label: s.label,
-    data: [s.value],
-    backgroundColor: s.color,
-    borderWidth: 0,
-    barPercentage: 0.6
-  }));
   new Chart(ctx, {
     type: 'bar',
-    data: { labels: [''], datasets },
+    data: {
+      labels: [''],
+      datasets: sources.map(s => ({
+        label: s.label,
+        data: [1],
+        backgroundColor: s.color,
+        borderWidth: 0
+      }))
+    },
     options: {
+      indexAxis: 'y',
       responsive: true,
-      indexAxis: 'x',
+      maintainAspectRatio: false,
       scales: {
-        x: { display: false },
+        x: { display: false, stacked: true },
         y: { display: false, stacked: true }
       },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            title: () => 'Draw Order',
-            label: ctx => {
-              const order = ctx.datasetIndex + 1;
-              return `${order}. ${ctx.dataset.label}`;
-            }
+            title: () => 'Draw Order (left → right)',
+            label: ctx => ctx.dataset.label
           }
         }
       }
@@ -426,19 +424,19 @@ function setScenario(key) {
     plugins: [{
       id: 'drawOrderLabels',
       afterDraw(chart) {
-        const { ctx: c } = chart;
+        const c = chart.ctx;
         c.save();
-        c.font = '12px sans-serif';
-        c.textAlign = 'left';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
         chart.data.datasets.forEach((ds, i) => {
           const meta = chart.getDatasetMeta(i);
           const bar = meta.data[0];
           if (!bar) return;
-          const y = bar.y;
-          const x = bar.x + bar.width / 2 + 10;
-          c.fillStyle = '#ccc';
-          const arrow = i === 0 ? '→ ' : i === chart.data.datasets.length - 1 ? '→ ' : '→ ';
-          c.fillText(`${i + 1}. ${ds.label}`, x, y + 4);
+          const w = bar.width;
+          const fontSize = Math.min(11, Math.max(8, w / ds.label.length * 1.6));
+          c.font = `bold ${fontSize}px sans-serif`;
+          c.fillStyle = '#fff';
+          if (w > 30) c.fillText(ds.label, bar.x, bar.y);
         });
         c.restore();
       }

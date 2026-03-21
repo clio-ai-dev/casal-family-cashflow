@@ -34,9 +34,9 @@ tr:hover td{background:#1f222c}
 .src-family{color:#eab308}
 .src-emergency{color:#ef4444}
 .depleted{color:#555}
-.source-legend{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px}
-.legend-item{font-size:.82rem;color:#aaa;line-height:1.5;display:flex;align-items:flex-start;gap:8px}
-.legend-item strong{color:#ddd}
+.source-legend{margin-top:20px;display:flex;flex-direction:column;gap:6px}
+.legend-item{font-size:.8rem;color:#888;display:flex;align-items:center;gap:8px}
+.legend-item strong{color:#ccc;min-width:120px}
 .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px}
 @media(max-width:600px){.source-legend{grid-template-columns:1fr}}
 @media(max-width:600px){h1{font-size:1.4rem}.card .value{font-size:1.3rem}table{font-size:.7rem}}

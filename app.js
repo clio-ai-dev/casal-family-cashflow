@@ -251,28 +251,40 @@ function renderSourceChart(data) {
 function renderBalanceChart(data) {
   const labels = data.balHistory.map((_, i) => data.rows[i].label);
   const keys = [
-    { key: 'hsa',          label: 'HSA',               color: '#3b82f6' },
+    { key: 'hsa',          label: 'HSA',                color: '#3b82f6' },
     { key: 'rothContrib',  label: 'Roth Contributions', color: '#a855f7' },
-    { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316' },
+    { key: 'rothRollover', label: 'Roth Rollover',      color: '#f97316' },
     { key: 'rothLadder',   label: 'Roth Ladder',        color: '#06b6d4' },
     { key: 'family',       label: 'Family FZROX',       color: '#eab308' },
     { key: 'emergency',    label: 'Emergency Fund',     color: '#ef4444' },
     { key: 'trad401k',     label: 'Pre-Tax 401K',       color: '#ec4899' }
   ];
 
+  // Stacked area datasets
   const datasets = keys.map(k => ({
     label: k.label,
     data: data.balHistory.map(b => Math.round(b[k.key])),
     borderColor: k.color,
-    backgroundColor: k.color + '20',
+    backgroundColor: k.color + '80',
+    fill: true,
+    tension: 0.3,
+    pointRadius: 0,
+    borderWidth: 1
+  }));
+
+  // Expenses line (inflation-adjusted monthly expense * 12 for visibility, or just monthly)
+  datasets.push({
+    label: 'Monthly Expenses (inflation-adj)',
+    data: data.rows.map(r => Math.round(r.expenses)),
+    borderColor: '#ffffff',
+    backgroundColor: 'transparent',
     fill: false,
     tension: 0.3,
     pointRadius: 0,
-    borderWidth: 2
-  }));
+    borderWidth: 2,
+    borderDash: [6, 4]
+  });
 
-  // Find the label index for 59½ unlock
-  const unlockLabel = labels.find((l, i) => i === UNLOCK_MONTH_401K) || '2038-12';
   const unlockIdx = labels.indexOf('2038-12');
 
   const ctx = document.getElementById('balanceChart').getContext('2d');
@@ -312,14 +324,16 @@ function renderBalanceChart(data) {
       },
       scales: {
         x: {
+          stacked: true,
           ticks: {
             color: '#666',
-            maxTicksLimit: 24,
-            callback: function(val, idx) { return idx % 6 === 0 ? this.getLabelForValue(val) : ''; }
+            maxTicksLimit: 20,
+            callback: function(val, idx) { return idx % 12 === 0 ? this.getLabelForValue(val) : ''; }
           },
-          grid: { color: '#1f222c' }
+          grid: { color: '#1f222c', display: false }
         },
         y: {
+          stacked: true,
           ticks: { color: '#666', callback: v => '$' + (v/1000).toFixed(0) + 'K' },
           grid: { color: '#1f222c' }
         }

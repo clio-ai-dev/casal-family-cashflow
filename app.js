@@ -382,12 +382,15 @@ function setScenario(key) {
   const ctx = document.getElementById('expenseChart');
   if (!ctx) return;
   const categories = [
-    { label: 'Core Recurring',    value: 3818, color: '#3b82f6' },
-    { label: 'ACA Health + Dental', value: 2221, color: '#ef4444' },
-    { label: 'Sinking Fund',      value: 1070, color: '#eab308' },
-    { label: 'Yessenia Allowance', value: 500,  color: '#a855f7' },
-    { label: '529 Contributions',  value: 460,  color: '#06b6d4' },
-    { label: 'Clothing & Gifts',  value: 200,  color: '#f97316' },
+    { label: 'Groceries & Gas',     value: 1595, color: '#22c55e' },
+    { label: 'Fixed Bills',          value: 954,  color: '#3b82f6' },
+    { label: 'Subscriptions & Edu',  value: 540,  color: '#8b5cf6' },
+    { label: 'Dining & Misc',        value: 729,  color: '#f59e0b' },
+    { label: 'ACA Health + Dental',   value: 2221, color: '#ef4444' },
+    { label: 'Sinking Fund',         value: 1070, color: '#eab308' },
+    { label: 'Yessenia Allowance',    value: 500,  color: '#a855f7' },
+    { label: '529 Contributions',     value: 460,  color: '#06b6d4' },
+    { label: 'Clothing & Gifts',     value: 200,  color: '#f97316' },
   ];
   new Chart(ctx, {
     type: 'doughnut',
@@ -408,7 +411,8 @@ function setScenario(key) {
           callbacks: {
             label: function(ctx) {
               const v = ctx.raw;
-              const pct = ((v / 8269) * 100).toFixed(1);
+              const total = ctx.chart.data.datasets[0].data.reduce((a,b) => a+b, 0);
+              const pct = ((v / total) * 100).toFixed(1);
               return ` $${v.toLocaleString()}/mo (${pct}%)`;
             }
           }

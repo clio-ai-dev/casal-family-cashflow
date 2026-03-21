@@ -418,7 +418,7 @@ function renderDrawOrder(data) {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { bottom: 30 } },
+      layout: { padding: { bottom: 45, top: 35 } },
       scales: {
         x: { display: false, stacked: true },
         y: { display: false, stacked: true }
@@ -438,25 +438,34 @@ function renderDrawOrder(data) {
       afterDraw(chart) {
         const c = chart.ctx;
         c.save();
+        c.font = '10px sans-serif';
+        c.fillStyle = '#aaa';
+        c.strokeStyle = '#555';
+        c.lineWidth = 1;
         chart.data.datasets.forEach((ds, i) => {
           const meta = chart.getDatasetMeta(i);
           const bar = meta.data[0];
           if (!bar || ds.data[0] === 0) return;
           const x = bar.x;
-          const barBottom = bar.y + bar.height / 2;
-          // Draw tick line
-          c.strokeStyle = '#555';
-          c.lineWidth = 1;
+          const above = i % 2 === 1;
+          const barTop = bar.y - bar.height / 2;
+          const barBot = bar.y + bar.height / 2;
           c.beginPath();
-          c.moveTo(x, barBottom);
-          c.lineTo(x, barBottom + 12);
-          c.stroke();
-          // Draw label below
-          c.font = '10px sans-serif';
-          c.fillStyle = '#aaa';
-          c.textAlign = 'center';
-          c.textBaseline = 'top';
-          c.fillText(ds.label, x, barBottom + 14);
+          if (above) {
+            c.moveTo(x, barTop);
+            c.lineTo(x, barTop - 14);
+            c.stroke();
+            c.textAlign = 'center';
+            c.textBaseline = 'bottom';
+            c.fillText(ds.label, x, barTop - 16);
+          } else {
+            c.moveTo(x, barBot);
+            c.lineTo(x, barBot + 14);
+            c.stroke();
+            c.textAlign = 'center';
+            c.textBaseline = 'top';
+            c.fillText(ds.label, x, barBot + 16);
+          }
         });
         c.restore();
       }

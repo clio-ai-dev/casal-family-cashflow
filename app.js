@@ -157,8 +157,7 @@ function renderSourceChart(data) {
     const draws = {};
     SOURCES.forEach(s => { draws[s.key] = 0; });
     chunk.forEach(r => { SOURCES.forEach(s => { draws[s.key] += r.draws[s.key]; }); });
-    // Average per month for the quarter
-    SOURCES.forEach(s => { draws[s.key] = Math.round(draws[s.key] / chunk.length); });
+    // Sum for the quarter (not average) — shows total quarterly spend per source
     quarters.push({ label, draws });
   }
   const labels = quarters.map(q => q.label);

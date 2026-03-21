@@ -39,4 +39,9 @@ tr:hover td{background:#1f222c}
 .legend-item strong{color:#ccc;min-width:120px}
 .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px}
 @media(max-width:600px){.source-legend{grid-template-columns:1fr}}
+.timeline{display:flex;flex-direction:column;gap:12px}
+.timeline-item{display:flex;gap:16px;padding:10px 14px;border-radius:8px;border-left:3px solid #333}
+.timeline-item.highlight{border-left-color:#22c55e;background:#22c55e08}
+.timeline-date{min-width:90px;font-weight:700;color:#fff;font-size:.85rem;flex-shrink:0}
+.timeline-action{color:#aaa;font-size:.85rem;line-height:1.5}
 @media(max-width:600px){h1{font-size:1.4rem}.card .value{font-size:1.3rem}table{font-size:.7rem}}

@@ -418,7 +418,7 @@ function renderDrawOrder(data) {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: 20 } },
+      layout: { padding: { top: 90 } },
       scales: {
         x: { display: false, stacked: true },
         y: { display: false, stacked: true }
@@ -438,17 +438,29 @@ function renderDrawOrder(data) {
       afterDraw(chart) {
         const c = chart.ctx;
         c.save();
-        c.font = 'bold 10px sans-serif';
-        c.fillStyle = '#ccc';
-        c.textAlign = 'center';
-        c.textBaseline = 'bottom';
         chart.data.datasets.forEach((ds, i) => {
           const meta = chart.getDatasetMeta(i);
           const bar = meta.data[0];
           if (!bar || ds.data[0] === 0) return;
           const barTop = bar.y - bar.height / 2;
-          // Label centered above its segment
-          c.fillText(ds.label, bar.x, barTop - 4);
+          const x = bar.x;
+          // Vertical tick line from label down to bar
+          c.strokeStyle = ds.backgroundColor;
+          c.lineWidth = 1;
+          c.beginPath();
+          c.moveTo(x, barTop);
+          c.lineTo(x, barTop - 8);
+          c.stroke();
+          // Rotated label
+          c.save();
+          c.translate(x, barTop - 12);
+          c.rotate(-Math.PI / 3);
+          c.font = '11px sans-serif';
+          c.fillStyle = '#ccc';
+          c.textAlign = 'left';
+          c.textBaseline = 'middle';
+          c.fillText(ds.label, 0, 0);
+          c.restore();
         });
         c.restore();
       }

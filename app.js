@@ -16,6 +16,9 @@ function getMonths() {
   return Math.max(12, (endYear - START_YEAR) * 12 - (START_MONTH - 1));
 }
 
+// Month index (0-based from Apr 2026) when 59½ is reached: Dec 2038 = month 152
+const UNLOCK_MONTH_401K = 152; // (2038-2026)*12 + (12-4) = 152
+
 const SOURCES = [
   { key: 'academy',      label: "Owner's Comp",        color: '#22c55e', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'beyondsoft',   label: 'Beyondsoft Final',    color: '#14b8a6', initial: 4000,   growth: 0,     maxDraw: 4000 },
@@ -23,7 +26,8 @@ const SOURCES = [
   { key: 'rothContrib',  label: 'Roth Contributions',  color: '#a855f7', initial: 34500,  growth: 0.07,  maxDraw: Infinity },
   { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 343000, growth: 0.07,  maxDraw: Infinity },
   { key: 'family',       label: 'Family FZROX',        color: '#eab308', initial: 20900,  growth: 0.07,  maxDraw: Infinity },
-  { key: 'emergency',    label: 'Emergency Fund',      color: '#ef4444', initial: 60000,  growth: 0.04,  maxDraw: Infinity }
+  { key: 'emergency',    label: 'Emergency Fund',      color: '#ef4444', initial: 60000,  growth: 0.04,  maxDraw: Infinity },
+  { key: 'trad401k',     label: 'Pre-Tax 401K (59½)',  color: '#ec4899', initial: 470700, growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K }
 ];
 
 let currentScenario = 'pessimistic';
@@ -73,10 +77,13 @@ function simulate(scenarioKey) {
       remaining -= bDraw;
     }
 
-    // 3-7. Remaining sources
-    const drawOrder = ['hsa', 'rothContrib', 'rothRollover', 'family', 'emergency'];
+    // 3-7. Remaining sources (respect unlock dates)
+    const drawOrder = ['hsa', 'rothContrib', 'rothRollover', 'family', 'emergency', 'trad401k'];
     for (const key of drawOrder) {
       if (remaining <= 0) break;
+      const src = SOURCES.find(s => s.key === key);
+      // Skip locked sources
+      if (src.unlocksAt !== undefined && m < src.unlocksAt) continue;
       let available = bal[key];
       if (key === 'hsa') {
         available = Math.min(available, 50000 - hsaTotalDrawn);
@@ -99,6 +106,7 @@ function simulate(scenarioKey) {
       rothRollover: bal.rothRollover,
       family: bal.family,
       emergency: bal.emergency,
+      trad401k: bal.trad401k,
       hsaDrawn: hsaTotalDrawn
     });
   }
@@ -109,7 +117,7 @@ function simulate(scenarioKey) {
 
   // Find depletion months for each source
   const depletions = {};
-  ['hsa', 'rothContrib', 'rothRollover', 'family', 'emergency'].forEach(key => {
+  ['hsa', 'rothContrib', 'rothRollover', 'family', 'emergency', 'trad401k'].forEach(key => {
     const idx = rows.findIndex(r => {
       if (key === 'hsa') return balHistory[rows.indexOf(r)].hsaDrawn >= 50000;
       return balHistory[rows.indexOf(r)][key] < 1;
@@ -135,6 +143,8 @@ function renderSummary(data) {
     <div class="card"><div class="label">Roth Contrib Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.rothContrib}</div></div>
     <div class="card"><div class="label">Roth Rollover Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.rothRollover}</div></div>
     <div class="card"><div class="label">Emergency Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.emergency}</div></div>
+    <div class="card"><div class="label">401K Unlocks (59½)</div><div class="value" style="font-size:1.1rem">2038-12</div></div>
+    <div class="card"><div class="label">401K Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.trad401k}</div></div>
   `;
 }
 
@@ -201,7 +211,8 @@ function renderBalanceChart(data) {
     { key: 'rothContrib',  label: 'Roth Contributions', color: '#a855f7' },
     { key: 'rothRollover', label: 'Roth Rollover',      color: '#f97316' },
     { key: 'family',       label: 'Family FZROX',       color: '#eab308' },
-    { key: 'emergency',    label: 'Emergency Fund',     color: '#ef4444' }
+    { key: 'emergency',    label: 'Emergency Fund',     color: '#ef4444' },
+    { key: 'trad401k',     label: 'Pre-Tax 401K',       color: '#ec4899' }
   ];
 
   const datasets = keys.map(k => ({
@@ -252,7 +263,7 @@ function renderTable(data) {
   const srcKeys = SOURCES.map(s => s.key);
   let html = '<table><thead><tr><th>Period</th><th>Expenses</th><th>Academy</th>';
   html += '<th>Beyondsoft</th><th>HSA</th><th>Roth Contrib</th><th>Roth Rollover</th>';
-  html += '<th>Family</th><th>Emergency</th><th>Gap</th></tr></thead><tbody>';
+  html += '<th>Family</th><th>Emergency</th><th>Pre-Tax 401K</th><th>Gap</th></tr></thead><tbody>';
 
   data.rows.forEach((r, i) => {
     // Show monthly for first 24, then quarterly

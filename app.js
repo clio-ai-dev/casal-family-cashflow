@@ -197,6 +197,9 @@ function renderSourceChart(data) {
     borderWidth: 0
   }));
 
+  // Find quarter index for 59½ marker
+  const unlockQuarterIdx = quarters.findIndex(q => q.label >= '2038-12');
+
   const ctx = document.getElementById('sourceChart').getContext('2d');
   if (sourceChart) sourceChart.destroy();
   sourceChart = new Chart(ctx, {
@@ -209,6 +212,26 @@ function renderSourceChart(data) {
         tooltip: {
           callbacks: {
             label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
+          }
+        },
+        annotation: {
+          annotations: {
+            unlockLine: {
+              type: 'line',
+              xMin: unlockQuarterIdx,
+              xMax: unlockQuarterIdx,
+              borderColor: '#ec4899',
+              borderWidth: 2,
+              borderDash: [6, 4],
+              label: {
+                display: true,
+                content: '59½',
+                position: 'start',
+                backgroundColor: '#ec489980',
+                color: '#fff',
+                font: { size: 11 }
+              }
+            }
           }
         }
       },

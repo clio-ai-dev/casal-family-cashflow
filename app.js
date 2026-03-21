@@ -445,7 +445,6 @@ function renderDrawOrder(data) {
       return `<span style="color:#ccc"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${s.color};margin-right:4px"></span>${i+1}. ${s.label} ($${Math.round(t/1000)}K)</span>`;
     }).join('');
   }
-  });
 }
 
 // Expense breakdown pie chart

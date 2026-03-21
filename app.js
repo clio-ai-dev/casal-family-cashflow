@@ -411,17 +411,18 @@ function renderDrawOrder(data) {
         label: s.label,
         data: [Math.round(totals[s.key])],
         backgroundColor: s.color,
-        borderWidth: 0
+        borderWidth: 0,
+        barThickness: 50
       }))
     },
     options: {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: 90 } },
+      layout: { padding: { top: 100, bottom: 10 } },
       scales: {
         x: { display: false, stacked: true },
-        y: { display: false, stacked: true }
+        y: { display: false, stacked: true, barThickness: 50 }
       },
       plugins: {
         legend: { display: false },

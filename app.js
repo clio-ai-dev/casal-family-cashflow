@@ -377,5 +377,46 @@ function setScenario(key) {
   renderTable(data);
 }
 
+// Expense breakdown pie chart
+(function renderExpensePie() {
+  const ctx = document.getElementById('expenseChart');
+  if (!ctx) return;
+  const categories = [
+    { label: 'Core Recurring',    value: 3818, color: '#3b82f6' },
+    { label: 'ACA Health + Dental', value: 2221, color: '#ef4444' },
+    { label: 'Sinking Fund',      value: 1070, color: '#eab308' },
+    { label: 'Yessenia Allowance', value: 500,  color: '#a855f7' },
+    { label: '529 Contributions',  value: 460,  color: '#06b6d4' },
+    { label: 'Clothing & Gifts',  value: 200,  color: '#f97316' },
+  ];
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: categories.map(c => c.label),
+      datasets: [{
+        data: categories.map(c => c.value),
+        backgroundColor: categories.map(c => c.color),
+        borderColor: '#0d0f13',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#ccc', padding: 14, font: { size: 13 } } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const v = ctx.raw;
+              const pct = ((v / 8269) * 100).toFixed(1);
+              return ` $${v.toLocaleString()}/mo (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+})();
+
 // Initial render
 setScenario('pessimistic');

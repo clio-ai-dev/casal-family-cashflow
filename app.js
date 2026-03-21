@@ -372,33 +372,44 @@ function setScenario(key) {
   document.getElementById('btn-' + key).classList.add('active');
   const data = simulate(key);
   renderSummary(data);
+  renderDrawOrder(data);
   renderSourceChart(data);
   if (document.getElementById('balanceChart')) renderBalanceChart(data);
   renderTable(data);
 }
 
-// Draw order stacked bar chart — single horizontal bar
-(function renderDrawOrder() {
+// Draw order stacked bar chart — single horizontal bar, sized by total lifetime draws
+let drawOrderChart = null;
+function renderDrawOrder(data) {
   const ctx = document.getElementById('drawOrderChart');
   if (!ctx) return;
-  const sources = [
-    { label: '1. .NET Academy',       color: '#22c55e' },
-    { label: '2. Beyondsoft',         color: '#14b8a6' },
-    { label: '3. HSA',                color: '#3b82f6' },
-    { label: '4. Roth Contributions', color: '#a855f7' },
-    { label: '5. Roth Rollover',      color: '#f97316' },
-    { label: '6. Roth Ladder',        color: '#06b6d4' },
-    { label: '7. Family FZROX',       color: '#eab308' },
-    { label: '8. Emergency Fund',     color: '#ef4444' },
-    { label: '9. Pre-Tax 401K (59½)', color: '#ec4899' },
+  if (drawOrderChart) drawOrderChart.destroy();
+
+  // Sum total draws per source across all months
+  const sourceOrder = [
+    { key: 'academy',      label: 'Academy',           color: '#22c55e' },
+    { key: 'beyondsoft',   label: 'Beyondsoft',         color: '#14b8a6' },
+    { key: 'hsa',          label: 'HSA',                color: '#3b82f6' },
+    { key: 'rothContrib',  label: 'Roth Contrib',       color: '#a855f7' },
+    { key: 'rothRollover', label: 'Roth Rollover',      color: '#f97316' },
+    { key: 'rothLadder',   label: 'Roth Ladder',        color: '#06b6d4' },
+    { key: 'family',       label: 'Family FZROX',       color: '#eab308' },
+    { key: 'emergency',    label: 'Emergency',          color: '#ef4444' },
+    { key: 'trad401k',     label: '401K (59½)',         color: '#ec4899' },
   ];
-  new Chart(ctx, {
+  const totals = {};
+  sourceOrder.forEach(s => { totals[s.key] = 0; });
+  data.rows.forEach(r => {
+    sourceOrder.forEach(s => { totals[s.key] += (r.draws[s.key] || 0); });
+  });
+
+  drawOrderChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: [''],
-      datasets: sources.map(s => ({
+      datasets: sourceOrder.map(s => ({
         label: s.label,
-        data: [1],
+        data: [Math.round(totals[s.key])],
         backgroundColor: s.color,
         borderWidth: 0
       }))
@@ -416,7 +427,7 @@ function setScenario(key) {
         tooltip: {
           callbacks: {
             title: () => 'Draw Order (left → right)',
-            label: ctx => ctx.dataset.label
+            label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
           }
         }
       }
@@ -433,16 +444,17 @@ function setScenario(key) {
           const bar = meta.data[0];
           if (!bar) return;
           const w = bar.width;
-          const fontSize = Math.min(11, Math.max(8, w / ds.label.length * 1.6));
+          if (w < 25) { c.restore(); return; }
+          const fontSize = Math.min(11, Math.max(8, w / ds.label.length * 1.5));
           c.font = `bold ${fontSize}px sans-serif`;
           c.fillStyle = '#fff';
-          if (w > 30) c.fillText(ds.label, bar.x, bar.y);
+          c.fillText(ds.label, bar.x, bar.y);
         });
         c.restore();
       }
     }]
   });
-})();
+}
 
 // Expense breakdown pie chart
 (function renderExpensePie() {

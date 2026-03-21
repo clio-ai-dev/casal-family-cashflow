@@ -78,6 +78,13 @@ function simulate(scenarioKey) {
       ladderConversions.push({ month: m, amount: convertAmt });
     }
 
+    // Grow unseasoned ladder conversions (they're invested in Roth IRA)
+    ladderConversions.forEach(c => {
+      if (m > c.month && m <= c.month + ROTH_LADDER_SEASONING) {
+        c.amount *= (1 + 0.07 / 12);
+      }
+    });
+
     // Credit seasoned ladder conversions to rothLadder balance
     ladderConversions.forEach(c => {
       if (m === c.month + ROTH_LADDER_SEASONING && c.amount > 0) {

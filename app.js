@@ -201,6 +201,7 @@ function renderSourceChart(data) {
 
   // Find month index for 59½ marker
   const unlockIdx = data.rows.findIndex(r => r.label >= '2038-12');
+  const unlockIdxY = data.rows.findIndex(r => r.label >= '2038-04');
 
   const ctx = document.getElementById('sourceChart').getContext('2d');
   if (sourceChart) sourceChart.destroy();
@@ -218,6 +219,22 @@ function renderSourceChart(data) {
         },
         annotation: {
           annotations: {
+            unlockLineY: {
+              type: 'line',
+              xMin: unlockIdxY,
+              xMax: unlockIdxY,
+              borderColor: '#d946ef',
+              borderWidth: 2,
+              borderDash: [6, 4],
+              label: {
+                display: true,
+                content: '59½ (Y)',
+                position: 'start',
+                backgroundColor: '#d946ef80',
+                color: '#fff',
+                font: { size: 11 }
+              }
+            },
             unlockLine: {
               type: 'line',
               xMin: unlockIdx,
@@ -227,7 +244,7 @@ function renderSourceChart(data) {
               borderDash: [6, 4],
               label: {
                 display: true,
-                content: '59½',
+                content: '59½ (J)',
                 position: 'start',
                 backgroundColor: '#ec489980',
                 color: '#fff',
@@ -319,6 +336,7 @@ function renderBalanceChart(data) {
   });
 
   const unlockIdx = labels.indexOf('2038-12');
+  const unlockIdxY = labels.indexOf('2038-04');
 
   const ctx = document.getElementById('balanceChart').getContext('2d');
   if (balanceChart) balanceChart.destroy();
@@ -336,6 +354,22 @@ function renderBalanceChart(data) {
         },
         annotation: {
           annotations: {
+            unlockLineY: {
+              type: 'line',
+              xMin: unlockIdxY,
+              xMax: unlockIdxY,
+              borderColor: '#d946ef',
+              borderWidth: 2,
+              borderDash: [6, 4],
+              label: {
+                display: true,
+                content: '59½ (Y)',
+                position: 'start',
+                backgroundColor: '#d946ef80',
+                color: '#fff',
+                font: { size: 11 }
+              }
+            },
             unlockLine: {
               type: 'line',
               xMin: unlockIdx,
@@ -345,7 +379,7 @@ function renderBalanceChart(data) {
               borderDash: [6, 4],
               label: {
                 display: true,
-                content: '59½ — 401K Unlocks',
+                content: '59½ (J)',
                 position: 'start',
                 backgroundColor: '#ec489980',
                 color: '#fff',

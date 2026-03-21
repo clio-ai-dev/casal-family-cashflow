@@ -411,18 +411,17 @@ function renderDrawOrder(data) {
         label: s.label,
         data: [Math.round(totals[s.key])],
         backgroundColor: s.color,
-        borderWidth: 0,
-        barThickness: 50
+        borderWidth: 0
       }))
     },
     options: {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: 100, bottom: 10 } },
+      layout: { padding: { top: 5, bottom: 5 } },
       scales: {
         x: { display: false, stacked: true },
-        y: { display: false, stacked: true, barThickness: 50 }
+        y: { display: false, stacked: true }
       },
       plugins: {
         legend: { display: false },
@@ -434,38 +433,18 @@ function renderDrawOrder(data) {
         }
       }
     },
-    plugins: [{
-      id: 'drawOrderLabels',
-      afterDraw(chart) {
-        const c = chart.ctx;
-        c.save();
-        chart.data.datasets.forEach((ds, i) => {
-          const meta = chart.getDatasetMeta(i);
-          const bar = meta.data[0];
-          if (!bar || ds.data[0] === 0) return;
-          const barTop = bar.y - bar.height / 2;
-          const x = bar.x;
-          // Vertical tick line from label down to bar
-          c.strokeStyle = ds.backgroundColor;
-          c.lineWidth = 1;
-          c.beginPath();
-          c.moveTo(x, barTop);
-          c.lineTo(x, barTop - 8);
-          c.stroke();
-          // Rotated label
-          c.save();
-          c.translate(x, barTop - 12);
-          c.rotate(-Math.PI / 3);
-          c.font = '11px sans-serif';
-          c.fillStyle = '#ccc';
-          c.textAlign = 'left';
-          c.textBaseline = 'middle';
-          c.fillText(ds.label, 0, 0);
-          c.restore();
-        });
-        c.restore();
-      }
-    }]
+    plugins: []
+  });
+
+  // Build HTML legend
+  const legend = document.getElementById('drawOrderLegend');
+  if (legend) {
+    legend.innerHTML = sourceOrder.map((s, i) => {
+      const t = totals[s.key];
+      if (t === 0) return '';
+      return `<span style="color:#ccc"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${s.color};margin-right:4px"></span>${i+1}. ${s.label} ($${Math.round(t/1000)}K)</span>`;
+    }).join('');
+  }
   });
 }
 

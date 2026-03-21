@@ -418,6 +418,7 @@ function renderDrawOrder(data) {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { bottom: 30 } },
       scales: {
         x: { display: false, stacked: true },
         y: { display: false, stacked: true }
@@ -437,18 +438,25 @@ function renderDrawOrder(data) {
       afterDraw(chart) {
         const c = chart.ctx;
         c.save();
-        c.textAlign = 'center';
-        c.textBaseline = 'middle';
         chart.data.datasets.forEach((ds, i) => {
           const meta = chart.getDatasetMeta(i);
           const bar = meta.data[0];
-          if (!bar) return;
-          const w = bar.width;
-          if (w < 25) { c.restore(); return; }
-          const fontSize = Math.min(11, Math.max(8, w / ds.label.length * 1.5));
-          c.font = `bold ${fontSize}px sans-serif`;
-          c.fillStyle = '#fff';
-          c.fillText(ds.label, bar.x, bar.y);
+          if (!bar || ds.data[0] === 0) return;
+          const x = bar.x;
+          const barBottom = bar.y + bar.height / 2;
+          // Draw tick line
+          c.strokeStyle = '#555';
+          c.lineWidth = 1;
+          c.beginPath();
+          c.moveTo(x, barBottom);
+          c.lineTo(x, barBottom + 12);
+          c.stroke();
+          // Draw label below
+          c.font = '10px sans-serif';
+          c.fillStyle = '#aaa';
+          c.textAlign = 'center';
+          c.textBaseline = 'top';
+          c.fillText(ds.label, x, barBottom + 14);
         });
         c.restore();
       }

@@ -439,13 +439,25 @@ function renderDrawOrder(data) {
     plugins: []
   });
 
-  // Build HTML legend
+  // Build HTML legend with descriptions matching Monthly Income Sources
+  const sourceDescs = {
+    academy:      "Academy take-home (65% of gross). 2x in December for Black Friday.",
+    beyondsoft:   "Final paycheck, April 2026 only.",
+    hsa:          "$50K max draws, grows at 7%.",
+    rothContrib:  "$41.5K basis pre-59½, full balance after.",
+    rothRollover: "$134K basis pre-59½, full balance after.",
+    rothLadder:   "$50K/yr conversions, 5-year seasoning, grows while waiting.",
+    family:       "Taxable brokerage, fully accessible.",
+    emergency:    "Cash at ~4%. Last resort.",
+    trad401k:     "Locked until 59½. Feeds Roth ladder.",
+    solo401k:     "Self-employed 401K. Locked until 59½.",
+  };
   const legend = document.getElementById('drawOrderLegend');
   if (legend) {
     legend.innerHTML = sourceOrder.map((s, i) => {
       const t = totals[s.key];
       if (t === 0) return '';
-      return `<span style="color:#ccc"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${s.color};margin-right:4px"></span>${i+1}. ${s.label} ($${Math.round(t/1000)}K)</span>`;
+      return `<div class="legend-item"><span class="dot" style="background:${s.color}"></span><strong>${s.label}</strong> — ${sourceDescs[s.key]}</div>`;
     }).join('');
   }
 }

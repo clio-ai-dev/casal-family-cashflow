@@ -525,6 +525,95 @@ function renderDrawOrder(data) {
   }
 }
 
+// Asset Map — visual bucket diagram
+(function renderAssetMap() {
+  const el = document.getElementById('assetMap');
+  if (!el) return;
+
+  const buckets = [
+    { label: '.NET Academy', sub: '$6K/mo pessimistic', amount: '', color: '#22c55e', height: 80, type: 'income' },
+    { label: 'HSA', sub: '$50K max draws', amount: '$56K', color: '#3b82f6', height: 70 },
+    { label: "Julio's Roth IRA", sub: '$41.5K basis', amount: '$67K', color: '#a855f7', height: 75 },
+    { label: "Yessenia's Roth IRA", sub: '$37.5K basis', amount: '$61K', color: '#d946ef', height: 72 },
+    { label: "Julio's Trad IRA", sub: '$50K/yr → Roth', amount: '$0→$386K', color: '#9ca3af', height: 60, type: 'passthrough' },
+    { label: 'MSFT 401K', sub: '', amount: '', color: '#000', height: 180, type: 'compound',
+      parts: [
+        { label: 'Pre-Tax', amount: '$386K', color: '#ec4899', height: 70 },
+        { label: 'Roth Growth', amount: '$300K', color: '#f97316', height: 60 },
+        { label: 'Roth Contrib', amount: '$135K', color: '#f97316', height: 50 },
+      ]
+    },
+    { label: 'Family Taxable', sub: 'FZROX + MSFT', amount: '$133K', color: '#eab308', height: 110 },
+    { label: 'Emergency Fund', sub: 'Last resort', amount: '$60K', color: '#ef4444', height: 70 },
+    { label: 'Solo 401K', sub: 'Locked until 59½', amount: '$25K', color: '#fb7185', height: 50 },
+    { label: '529 Plans', sub: '3 kids', amount: '$68K', color: '#06b6d4', height: 75 },
+  ];
+
+  const bw = 100, gap = 14, pad = 20;
+  const totalW = buckets.length * (bw + gap) - gap + pad * 2;
+  const svgH = 340;
+  const baseY = 280;
+
+  let svg = `<svg viewBox="0 0 ${totalW} ${svgH}" style="width:100%;max-width:${totalW}px;height:auto;font-family:system-ui,sans-serif">`;
+  svg += `<defs><filter id="ds"><feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/></filter></defs>`;
+
+  let x = pad;
+  buckets.forEach((b, i) => {
+    if (b.type === 'compound') {
+      // Stacked compound bucket (MSFT 401K)
+      let totalH = b.parts.reduce((s, p) => s + p.height, 0);
+      let y = baseY - totalH;
+      // Outer border
+      svg += `<rect x="${x-2}" y="${y-2}" width="${bw+4}" height="${totalH+4}" rx="6" fill="none" stroke="#555" stroke-width="1.5"/>`;
+      let py = y;
+      b.parts.forEach(p => {
+        svg += `<rect x="${x}" y="${py}" width="${bw}" height="${p.height}" rx="4" fill="${p.color}22" stroke="${p.color}" stroke-width="1.5" filter="url(#ds)"/>`;
+        svg += `<text x="${x + bw/2}" y="${py + p.height/2 - 6}" text-anchor="middle" fill="${p.color}" font-size="10" font-weight="bold">${p.amount}</text>`;
+        svg += `<text x="${x + bw/2}" y="${py + p.height/2 + 8}" text-anchor="middle" fill="#ccc" font-size="9">${p.label}</text>`;
+        py += p.height;
+      });
+      svg += `<text x="${x + bw/2}" y="${baseY + 16}" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">${b.label}</text>`;
+    } else {
+      let h = b.height;
+      let y = baseY - h;
+      let fill = b.type === 'passthrough' ? `${b.color}11` : `${b.color}22`;
+      let stroke = b.type === 'passthrough' ? '#666' : b.color;
+      let dash = b.type === 'passthrough' ? ' stroke-dasharray="6,3"' : '';
+      svg += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="6" fill="${fill}" stroke="${stroke}" stroke-width="1.5"${dash} filter="url(#ds)"/>`;
+      if (b.type === 'income') {
+        svg += `<text x="${x + bw/2}" y="${y + h/2 - 6}" text-anchor="middle" fill="${b.color}" font-size="11" font-weight="bold">${b.label}</text>`;
+        svg += `<text x="${x + bw/2}" y="${y + h/2 + 10}" text-anchor="middle" fill="#aaa" font-size="9">${b.sub}</text>`;
+      } else {
+        svg += `<text x="${x + bw/2}" y="${y + h/2 - 10}" text-anchor="middle" fill="${b.color}" font-size="13" font-weight="bold">${b.amount}</text>`;
+        if (b.sub) svg += `<text x="${x + bw/2}" y="${y + h/2 + 6}" text-anchor="middle" fill="#aaa" font-size="8.5">${b.sub}</text>`;
+      }
+      svg += `<text x="${x + bw/2}" y="${baseY + 16}" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">${b.label}</text>`;
+      if (b.sub && b.type !== 'income') {
+        // label already in rect
+      }
+    }
+    x += bw + gap;
+  });
+
+  // Flow arrow: Trad IRA → Roth ladder (bucket 4 to bucket 2)
+  const tradX = pad + 4 * (bw + gap) + bw/2;
+  const tradY = baseY - 60;
+  const julioRothX = pad + 2 * (bw + gap) + bw/2;
+  const julioRothY = baseY - 75 - 10;
+  svg += `<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#9ca3af"/></marker></defs>`;
+  svg += `<path d="M${tradX},${tradY - 15} C${tradX - 30},${tradY - 60} ${julioRothX + 40},${julioRothY - 30} ${julioRothX + 10},${julioRothY}" stroke="#9ca3af" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>`;
+  svg += `<text x="${(tradX + julioRothX)/2}" y="${tradY - 50}" text-anchor="middle" fill="#9ca3af" font-size="9">$50K/yr</text>`;
+
+  // Flow arrow: MSFT Pre-Tax → Trad IRA
+  const msftX = pad + 5 * (bw + gap) + bw/2;
+  const msftY = baseY - 180;
+  svg += `<path d="M${msftX - bw/2 - 5},${msftY + 35} L${tradX + bw/2 + 5},${tradY - 10}" stroke="#ec4899" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>`;
+  svg += `<text x="${(msftX + tradX)/2 - 10}" y="${(msftY + tradY)/2 - 5}" text-anchor="middle" fill="#ec4899" font-size="9">rollover</text>`;
+
+  svg += '</svg>';
+  el.innerHTML = svg;
+})();
+
 // Expense breakdown pie chart
 (function renderExpensePie() {
   const ctx = document.getElementById('expenseChart');

@@ -225,6 +225,10 @@ function renderBalanceChart(data) {
     borderWidth: 2
   }));
 
+  // Find the label index for 59½ unlock
+  const unlockLabel = labels.find((l, i) => i === UNLOCK_MONTH_401K) || '2038-12';
+  const unlockIdx = labels.indexOf('2038-12');
+
   const ctx = document.getElementById('balanceChart').getContext('2d');
   if (balanceChart) balanceChart.destroy();
   balanceChart = new Chart(ctx, {
@@ -237,6 +241,26 @@ function renderBalanceChart(data) {
         tooltip: {
           callbacks: {
             label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
+          }
+        },
+        annotation: {
+          annotations: {
+            unlockLine: {
+              type: 'line',
+              xMin: unlockIdx,
+              xMax: unlockIdx,
+              borderColor: '#ec4899',
+              borderWidth: 2,
+              borderDash: [6, 4],
+              label: {
+                display: true,
+                content: '59½ — 401K Unlocks',
+                position: 'start',
+                backgroundColor: '#ec489980',
+                color: '#fff',
+                font: { size: 11 }
+              }
+            }
           }
         }
       },

@@ -189,27 +189,16 @@ function renderSummary(data) {
 }
 
 function renderSourceChart(data) {
-  // Aggregate to quarterly for readability
-  const quarters = [];
-  for (let i = 0; i < data.rows.length; i += 3) {
-    const chunk = data.rows.slice(i, i + 3);
-    const label = chunk[0].label;
-    const draws = {};
-    SOURCES.forEach(s => { draws[s.key] = 0; });
-    chunk.forEach(r => { SOURCES.forEach(s => { draws[s.key] += r.draws[s.key]; }); });
-    // Sum for the quarter (not average) — shows total quarterly spend per source
-    quarters.push({ label, draws });
-  }
-  const labels = quarters.map(q => q.label);
+  const labels = data.rows.map(r => r.label);
   const datasets = SOURCES.map(s => ({
     label: s.label,
-    data: quarters.map(q => q.draws[s.key]),
+    data: data.rows.map(r => r.draws[s.key]),
     backgroundColor: s.color,
     borderWidth: 0
   }));
 
-  // Find quarter index for 59½ marker
-  const unlockQuarterIdx = quarters.findIndex(q => q.label >= '2038-12');
+  // Find month index for 59½ marker
+  const unlockIdx = data.rows.findIndex(r => r.label >= '2038-12');
 
   const ctx = document.getElementById('sourceChart').getContext('2d');
   if (sourceChart) sourceChart.destroy();
@@ -229,8 +218,8 @@ function renderSourceChart(data) {
           annotations: {
             unlockLine: {
               type: 'line',
-              xMin: unlockQuarterIdx,
-              xMax: unlockQuarterIdx,
+              xMin: unlockIdx,
+              xMax: unlockIdx,
               borderColor: '#ec4899',
               borderWidth: 2,
               borderDash: [6, 4],
@@ -252,9 +241,9 @@ function renderSourceChart(data) {
           ticks: {
             color: '#666',
             maxTicksLimit: 20,
-            callback: function(val, idx) { return idx % 4 === 0 ? this.getLabelForValue(val) : ''; }
+            callback: function(val, idx) { return idx % 12 === 0 ? this.getLabelForValue(val) : ''; }
           },
-          grid: { color: '#1f222c' }
+          grid: { color: '#1f222c', display: false }
         },
         y: {
           stacked: true,

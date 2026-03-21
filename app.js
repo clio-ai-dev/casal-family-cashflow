@@ -178,7 +178,6 @@ function renderSummary(data) {
     <div class="card"><div class="label">Total Runway</div><div class="value ${data.runwayMonths >= 120 ? 'green' : data.runwayMonths >= 60 ? 'orange' : 'red'}">${data.runwayMonths >= 120 ? '10+ years' : yrs + ' years'}</div>
       <div class="detail">${data.runwayMonths >= 120 ? 'Indefinite at this rate' : data.runwayMonths + ' months'}</div></div>
     <div class="card"><div class="label">Inflation Rate</div><div class="value" style="font-size:1.1rem">${(INFLATION_ANNUAL * 100).toFixed(0)}%/yr</div></div>
-    <div class="card"><div class="label">401K Unlocks (59½)</div><div class="value" style="font-size:1.1rem">2038-12</div></div>
   `;
 }
 

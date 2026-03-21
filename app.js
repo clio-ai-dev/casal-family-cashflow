@@ -32,7 +32,7 @@ const SOURCES = [
   { key: 'academy',      label: "Owner's Comp",        color: '#22c55e', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'beyondsoft',   label: 'Beyondsoft Final',    color: '#14b8a6', initial: 4000,   growth: 0,     maxDraw: 4000 },
   { key: 'hsa',          label: 'HSA Reimbursements',  color: '#3b82f6', initial: 56497,  growth: 0.07,  maxDraw: 50000 },
-  { key: 'rothContrib',  label: 'Roth Contributions',  color: '#a855f7', initial: 66790,  growth: 0.07,  maxDraw: Infinity, basisCap: 41500 },
+  { key: 'rothContrib',  label: "Julio's Roth IRA",  color: '#a855f7', initial: 66790,  growth: 0.07,  maxDraw: Infinity, basisCap: 41500 },
   { key: 'yesseniaRoth', label: "Yessenia's Roth IRA", color: '#d946ef', initial: 61149,  growth: 0.07,  maxDraw: Infinity, basisCap: 37502, basisUnlock: UNLOCK_MONTH_YESSENIA },
   { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 433006, growth: 0.07,  maxDraw: Infinity, basisCap: 134388 },
   { key: 'rothLadder',   label: 'Roth Ladder',         color: '#06b6d4', initial: 0,      growth: 0,     maxDraw: Infinity },
@@ -255,13 +255,42 @@ function renderSourceChart(data) {
       }
     }
   });
-}
 
-function renderBalanceChart(data) {
+  // Build source legend (2-column grid, same as draw order)
+  const srcDescs = {
+    academy:      "Academy take-home (65% of gross). 2x in December for Black Friday.",
+    beyondsoft:   "Final paycheck, April 2026 only.",
+    hsa:          "$50K max draws, grows at 7%.",
+    rothContrib:  "$41.5K basis pre-59½, full balance after.",
+    yesseniaRoth: "$37.5K basis pre-59½ (Apr 2038), full balance after.",
+    rothRollover: "$134K basis pre-59½, full balance after.",
+    rothLadder:   "$50K/yr conversions, 5-year seasoning, grows while waiting.",
+    family:       "Taxable brokerage, fully accessible.",
+    emergency:    "Cash at ~4%. Last resort.",
+    trad401k:     "Locked until 59½. Feeds Roth ladder.",
+    solo401k:     "Self-employed 401K. Locked until 59½.",
+  };
+  const srcLegend = document.getElementById('sourceLegend');
+  if (srcLegend) {
+    const items = SOURCES.filter(s => srcDescs[s.key]);
+    const half = Math.ceil(items.length / 2);
+    let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px">';
+    for (let i = 0; i < half; i++) {
+      const l = items[i];
+      if (l) html += `<div class="legend-item"><span class="dot" style="background:${l.color}"></span><strong>${l.label}</strong> — ${srcDescs[l.key]}</div>`;
+      else html += '<div></div>';
+      const r = items[half + i];
+      if (r) html += `<div class="legend-item"><span class="dot" style="background:${r.color}"></span><strong>${r.label}</strong> — ${srcDescs[r.key]}</div>`;
+      else html += '<div></div>';
+    }
+    html += '</div>';
+    srcLegend.innerHTML = html;
+  }
+}
   const labels = data.balHistory.map((_, i) => data.rows[i].label);
   const keys = [
     { key: 'hsa',          label: 'HSA',                color: '#3b82f6' },
-    { key: 'rothContrib',  label: 'Roth Contributions', color: '#a855f7' },
+    { key: 'rothContrib',  label: "Julio's Roth IRA", color: '#a855f7' },
     { key: 'yesseniaRoth', label: "Yessenia's Roth",    color: '#d946ef' },
     { key: 'rothRollover', label: 'Roth Rollover',      color: '#f97316' },
     { key: 'rothLadder',   label: 'Roth Ladder',        color: '#06b6d4' },
@@ -356,7 +385,7 @@ function renderBalanceChart(data) {
 function renderTable(data) {
   const srcKeys = SOURCES.map(s => s.key);
   let html = '<table><thead><tr><th>Period</th><th>Expenses</th><th>Academy</th>';
-  html += '<th>Beyondsoft</th><th>HSA</th><th>Roth Contrib</th><th>Roth Rollover</th>';
+  html += '<th>Beyondsoft</th><th>HSA</th><th>Julio's Roth</th><th>Roth Rollover</th>';
   html += '<th>Roth Ladder</th><th>Family</th><th>Emergency</th><th>Pre-Tax 401K</th><th>Gap</th></tr></thead><tbody>';
 
   data.rows.forEach((r, i) => {
@@ -399,7 +428,7 @@ function renderDrawOrder(data) {
     { key: 'academy',      label: 'Academy',           color: '#22c55e' },
     { key: 'beyondsoft',   label: 'Beyondsoft',         color: '#14b8a6' },
     { key: 'hsa',          label: 'HSA',                color: '#3b82f6' },
-    { key: 'rothContrib',  label: 'Roth Contrib',       color: '#a855f7' },
+    { key: 'rothContrib',  label: "Julio's Roth",       color: '#a855f7' },
     { key: 'yesseniaRoth', label: "Yessenia's Roth",    color: '#d946ef' },
     { key: 'rothRollover', label: 'Roth Rollover',      color: '#f97316' },
     { key: 'rothLadder',   label: 'Roth Ladder',        color: '#06b6d4' },

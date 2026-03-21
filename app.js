@@ -203,7 +203,7 @@ function renderSourceChart(data) {
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#aaa', usePointStyle: true, pointStyle: 'circle', padding: 8, font: { size: 11 }, boxWidth: 8 } },
+        legend: { display: false },
         tooltip: {
           callbacks: {
             label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`

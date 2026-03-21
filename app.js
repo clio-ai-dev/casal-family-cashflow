@@ -70,8 +70,8 @@ function simulate(scenarioKey) {
       }
     });
 
-    // Roth conversion ladder: convert annually (every 12 months) from trad401k
-    if (m >= ROTH_LADDER_START_MONTH && m % 12 === 0 && bal.trad401k > 0) {
+    // Roth conversion ladder: convert annually (every 12 months) from trad401k, stop at 59½
+    if (m >= ROTH_LADDER_START_MONTH && m < UNLOCK_MONTH_401K && m % 12 === 0 && bal.trad401k > 0) {
       const convertAmt = Math.min(ROTH_LADDER_ANNUAL, bal.trad401k);
       bal.trad401k -= convertAmt;
       ladderConversions.push({ month: m, amount: convertAmt });

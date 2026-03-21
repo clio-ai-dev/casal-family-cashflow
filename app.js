@@ -287,6 +287,8 @@ function renderSourceChart(data) {
     srcLegend.innerHTML = html;
   }
 }
+
+function renderBalanceChart(data) {
   const labels = data.balHistory.map((_, i) => data.rows[i].label);
   const keys = [
     { key: 'hsa',          label: 'HSA',                color: '#3b82f6' },
@@ -385,7 +387,7 @@ function renderSourceChart(data) {
 function renderTable(data) {
   const srcKeys = SOURCES.map(s => s.key);
   let html = '<table><thead><tr><th>Period</th><th>Expenses</th><th>Academy</th>';
-  html += '<th>Beyondsoft</th><th>HSA</th><th>Julio's Roth</th><th>Roth Rollover</th>';
+  html += '<th>Beyondsoft</th><th>HSA</th><th>Julio\'s Roth</th><th>Roth Rollover</th>';
   html += '<th>Roth Ladder</th><th>Family</th><th>Emergency</th><th>Pre-Tax 401K</th><th>Gap</th></tr></thead><tbody>';
 
   data.rows.forEach((r, i) => {

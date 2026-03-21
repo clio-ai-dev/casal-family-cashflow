@@ -5,9 +5,16 @@ const SCENARIOS = {
 
 const EXPENSES_MO = 8269;
 const EXPENSES_APR = 8048; // COBRA month
-const MONTHS = 120;
+const MONTHS_DEFAULT = 120;
 const START_YEAR = 2026;
 const START_MONTH = 4; // April
+
+function getMonths() {
+  const el = document.getElementById('end-year');
+  if (!el) return MONTHS_DEFAULT;
+  const endYear = parseInt(el.value) || (START_YEAR + 10);
+  return Math.max(12, (endYear - START_YEAR) * 12 - (START_MONTH - 1));
+}
 
 const SOURCES = [
   { key: 'academy',      label: "Owner's Comp",        color: '#22c55e', initial: 0,      growth: 0,     maxDraw: Infinity },
@@ -24,6 +31,7 @@ let sourceChart, balanceChart;
 
 function simulate(scenarioKey) {
   const sc = SCENARIOS[scenarioKey];
+  const MONTHS = getMonths();
   const compMo = sc.grossMo * sc.compRate;
 
   // Initialize balances

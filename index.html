@@ -3,19 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FIRE Cash Flow Projection — Casal Family</title>
+<title>Casal Family Cash Flow Projection</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
-  <h1>🔥 FIRE Cash Flow Projection</h1>
-  <p class="subtitle">Casal Family — 10-Year Expense Coverage Plan</p>
+  <h1>Casal Family Cash Flow Projection</h1>
+  <p class="subtitle">Expense Coverage Plan</p>
   
   <div class="controls">
     <div class="toggle-group">
       <button id="btn-pessimistic" class="toggle active" onclick="setScenario('pessimistic')">Pessimistic ($6K/mo gross)</button>
       <button id="btn-realistic" class="toggle" onclick="setScenario('realistic')">Realistic ($12K/mo gross)</button>
+    </div>
+    <div class="toggle-group">
+      <label for="end-year" style="color:#aaa;font-size:0.9rem;margin-right:0.5rem;">End Year:</label>
+      <input type="number" id="end-year" min="2027" max="2070" value="2036" style="width:5rem;padding:0.4rem 0.6rem;border-radius:6px;border:1px solid #333;background:#181a20;color:#fff;font-size:0.9rem;" onchange="setScenario(currentScenario)">
     </div>
   </div>
 

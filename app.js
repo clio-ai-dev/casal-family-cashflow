@@ -31,11 +31,11 @@ const SOURCES = [
   { key: 'beyondsoft',   label: 'Beyondsoft Final',    color: '#14b8a6', initial: 4000,   growth: 0,     maxDraw: 4000 },
   { key: 'hsa',          label: 'HSA Reimbursements',  color: '#3b82f6', initial: 56497,  growth: 0.07,  maxDraw: 50000 },
   { key: 'rothContrib',  label: 'Roth Contributions',  color: '#a855f7', initial: 59790,  growth: 0.07,  maxDraw: Infinity, basisCap: 34500 },
-  { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 439642, growth: 0.07,  maxDraw: Infinity, basisCap: 134388 },
+  { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 433006, growth: 0.07,  maxDraw: Infinity, basisCap: 134388 },
   { key: 'rothLadder',   label: 'Roth Ladder',         color: '#06b6d4', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'family',       label: 'Family FZROX',        color: '#eab308', initial: 20900,  growth: 0.07,  maxDraw: Infinity },
   { key: 'emergency',    label: 'Emergency Fund',      color: '#ef4444', initial: 60000,  growth: 0.04,  maxDraw: Infinity },
-  { key: 'trad401k',     label: 'Pre-Tax 401K (59½)',  color: '#ec4899', initial: 391463, growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K }
+  { key: 'trad401k',     label: 'Pre-Tax 401K (59½)',  color: '#ec4899', initial: 385554, growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K }
 ];
 
 let currentScenario = 'pessimistic';

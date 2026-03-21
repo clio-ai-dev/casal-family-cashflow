@@ -371,7 +371,7 @@ function setScenario(key) {
   const data = simulate(key);
   renderSummary(data);
   renderSourceChart(data);
-  renderBalanceChart(data);
+  if (document.getElementById('balanceChart')) renderBalanceChart(data);
   renderTable(data);
 }
 

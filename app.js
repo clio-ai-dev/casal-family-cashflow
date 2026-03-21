@@ -19,8 +19,9 @@ function getMonths() {
   return Math.max(12, (endYear - START_YEAR) * 12 - (START_MONTH - 1));
 }
 
-// Month index (0-based from Apr 2026) when 59½ is reached: Dec 2038 = month 152
-const UNLOCK_MONTH_401K = 152; // (2038-2026)*12 + (12-4) = 152
+// Month index (0-based from Apr 2026) when 59½ is reached
+const UNLOCK_MONTH_401K = 152; // Julio: Dec 2038 = (2038-2026)*12 + (12-4) = 152
+const UNLOCK_MONTH_YESSENIA = 144; // Yessenia: Apr 2038 = (2038-2026)*12 + (4-4) = 144
 
 // Roth Conversion Ladder config
 const ROTH_LADDER_ANNUAL = 50000; // Annual conversion from Trad IRA → Roth
@@ -32,6 +33,7 @@ const SOURCES = [
   { key: 'beyondsoft',   label: 'Beyondsoft Final',    color: '#14b8a6', initial: 4000,   growth: 0,     maxDraw: 4000 },
   { key: 'hsa',          label: 'HSA Reimbursements',  color: '#3b82f6', initial: 56497,  growth: 0.07,  maxDraw: 50000 },
   { key: 'rothContrib',  label: 'Roth Contributions',  color: '#a855f7', initial: 66790,  growth: 0.07,  maxDraw: Infinity, basisCap: 41500 },
+  { key: 'yesseniaRoth', label: "Yessenia's Roth IRA", color: '#d946ef', initial: 61149,  growth: 0.07,  maxDraw: Infinity, basisCap: 37502, basisUnlock: UNLOCK_MONTH_YESSENIA },
   { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 433006, growth: 0.07,  maxDraw: Infinity, basisCap: 134388 },
   { key: 'rothLadder',   label: 'Roth Ladder',         color: '#06b6d4', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'family',       label: 'Family FZROX',        color: '#eab308', initial: 20900,  growth: 0.07,  maxDraw: Infinity },
@@ -114,7 +116,7 @@ function simulate(scenarioKey) {
     }
 
     // 3-7. Remaining sources (respect unlock dates)
-    const drawOrder = ['hsa', 'rothContrib', 'rothRollover', 'rothLadder', 'family', 'trad401k', 'solo401k', 'emergency'];
+    const drawOrder = ['hsa', 'rothContrib', 'yesseniaRoth', 'rothRollover', 'rothLadder', 'family', 'trad401k', 'solo401k', 'emergency'];
     for (const key of drawOrder) {
       if (remaining <= 0) break;
       const src = SOURCES.find(s => s.key === key);
@@ -124,8 +126,11 @@ function simulate(scenarioKey) {
       if (key === 'hsa') {
         available = Math.min(available, 50000 - hsaTotalDrawn);
       }
-      if (src.basisCap !== undefined && m < UNLOCK_MONTH_401K) {
-        available = Math.min(available, Math.max(0, src.basisCap - (cumulativeDraws[key] || 0)));
+      if (src.basisCap !== undefined) {
+        const basisUnlockMonth = src.basisUnlock !== undefined ? src.basisUnlock : UNLOCK_MONTH_401K;
+        if (m < basisUnlockMonth) {
+          available = Math.min(available, Math.max(0, src.basisCap - (cumulativeDraws[key] || 0)));
+        }
       }
       const draw = Math.min(available, remaining);
       if (draw > 0) {
@@ -143,6 +148,7 @@ function simulate(scenarioKey) {
       label,
       hsa: bal.hsa,
       rothContrib: bal.rothContrib,
+      yesseniaRoth: bal.yesseniaRoth,
       rothRollover: bal.rothRollover,
       rothLadder: bal.rothLadder,
       family: bal.family,
@@ -158,7 +164,7 @@ function simulate(scenarioKey) {
 
   // Find depletion months for each source
   const depletions = {};
-  ['hsa', 'rothContrib', 'rothRollover', 'rothLadder', 'family', 'emergency', 'trad401k'].forEach(key => {
+  ['hsa', 'rothContrib', 'yesseniaRoth', 'rothRollover', 'rothLadder', 'family', 'emergency', 'trad401k'].forEach(key => {
     const idx = rows.findIndex(r => {
       if (key === 'hsa') return balHistory[rows.indexOf(r)].hsaDrawn >= 50000;
       return balHistory[rows.indexOf(r)][key] < 1;
@@ -256,6 +262,7 @@ function renderBalanceChart(data) {
   const keys = [
     { key: 'hsa',          label: 'HSA',                color: '#3b82f6' },
     { key: 'rothContrib',  label: 'Roth Contributions', color: '#a855f7' },
+    { key: 'yesseniaRoth', label: "Yessenia's Roth",    color: '#d946ef' },
     { key: 'rothRollover', label: 'Roth Rollover',      color: '#f97316' },
     { key: 'rothLadder',   label: 'Roth Ladder',        color: '#06b6d4' },
     { key: 'family',       label: 'Family FZROX',       color: '#eab308' },
@@ -393,6 +400,7 @@ function renderDrawOrder(data) {
     { key: 'beyondsoft',   label: 'Beyondsoft',         color: '#14b8a6' },
     { key: 'hsa',          label: 'HSA',                color: '#3b82f6' },
     { key: 'rothContrib',  label: 'Roth Contrib',       color: '#a855f7' },
+    { key: 'yesseniaRoth', label: "Yessenia's Roth",    color: '#d946ef' },
     { key: 'rothRollover', label: 'Roth Rollover',      color: '#f97316' },
     { key: 'rothLadder',   label: 'Roth Ladder',        color: '#06b6d4' },
     { key: 'family',       label: 'Family FZROX',       color: '#eab308' },
@@ -445,6 +453,7 @@ function renderDrawOrder(data) {
     beyondsoft:   "Final paycheck, April 2026 only.",
     hsa:          "$50K max draws, grows at 7%.",
     rothContrib:  "$41.5K basis pre-59½, full balance after.",
+    yesseniaRoth: "$37.5K basis pre-59½ (Apr 2038), full balance after.",
     rothRollover: "$134K basis pre-59½, full balance after.",
     rothLadder:   "$50K/yr conversions, 5-year seasoning, grows while waiting.",
     family:       "Taxable brokerage, fully accessible.",

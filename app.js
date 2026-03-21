@@ -290,17 +290,8 @@ function renderSourceChart(data) {
 
 function renderBalanceChart(data) {
   const labels = data.balHistory.map((_, i) => data.rows[i].label);
-  const keys = [
-    { key: 'hsa',          label: 'HSA',                color: '#3b82f6' },
-    { key: 'rothContrib',  label: "Julio's Roth IRA", color: '#a855f7' },
-    { key: 'yesseniaRoth', label: "Yessenia's Roth",    color: '#d946ef' },
-    { key: 'rothRollover', label: 'Roth Rollover',      color: '#f97316' },
-    { key: 'rothLadder',   label: 'Roth Ladder',        color: '#06b6d4' },
-    { key: 'family',       label: 'Family FZROX',       color: '#eab308' },
-    { key: 'emergency',    label: 'Emergency Fund',     color: '#ef4444' },
-    { key: 'trad401k',     label: 'Pre-Tax 401K',       color: '#ec4899' },
-    { key: 'solo401k',     label: 'Solo 401K',          color: '#fb7185' }
-  ];
+  const balKeys = ['hsa','rothContrib','yesseniaRoth','rothRollover','rothLadder','family','emergency','trad401k','solo401k'];
+  const keys = balKeys.map(k => SOURCES.find(s => s.key === k)).filter(Boolean);
 
   // Stacked area datasets
   const datasets = keys.map(k => ({
@@ -426,19 +417,7 @@ function renderDrawOrder(data) {
   if (drawOrderChart) drawOrderChart.destroy();
 
   // Sum total draws per source across all months
-  const sourceOrder = [
-    { key: 'academy',      label: 'Academy',           color: '#22c55e' },
-    { key: 'beyondsoft',   label: 'Beyondsoft',         color: '#14b8a6' },
-    { key: 'hsa',          label: 'HSA',                color: '#3b82f6' },
-    { key: 'rothContrib',  label: "Julio's Roth",       color: '#a855f7' },
-    { key: 'yesseniaRoth', label: "Yessenia's Roth",    color: '#d946ef' },
-    { key: 'rothRollover', label: 'Roth Rollover',      color: '#f97316' },
-    { key: 'rothLadder',   label: 'Roth Ladder',        color: '#06b6d4' },
-    { key: 'family',       label: 'Family FZROX',       color: '#eab308' },
-    { key: 'emergency',    label: 'Emergency',          color: '#ef4444' },
-    { key: 'trad401k',     label: '401K (59½)',         color: '#ec4899' },
-    { key: 'solo401k',     label: 'Solo 401K (59½)',    color: '#fb7185' },
-  ];
+  const sourceOrder = SOURCES;
   const totals = {};
   sourceOrder.forEach(s => { totals[s.key] = 0; });
   data.rows.forEach(r => {

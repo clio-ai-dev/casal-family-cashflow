@@ -177,14 +177,8 @@ function renderSummary(data) {
     <div class="card"><div class="label">Monthly Gap</div><div class="value ${surplus ? 'green' : 'orange'}">$${Math.abs(gap).toLocaleString()}${surplus ? ' surplus' : ''}</div></div>
     <div class="card"><div class="label">Total Runway</div><div class="value ${data.runwayMonths >= 120 ? 'green' : data.runwayMonths >= 60 ? 'orange' : 'red'}">${data.runwayMonths >= 120 ? '10+ years' : yrs + ' years'}</div>
       <div class="detail">${data.runwayMonths >= 120 ? 'Indefinite at this rate' : data.runwayMonths + ' months'}</div></div>
-    <div class="card"><div class="label">HSA Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.hsa}</div></div>
-    <div class="card"><div class="label">Roth Contrib Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.rothContrib}</div></div>
-    <div class="card"><div class="label">Roth Rollover Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.rothRollover}</div></div>
-    <div class="card"><div class="label">Roth Ladder Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.rothLadder}</div></div>
-    <div class="card"><div class="label">Family Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.family}</div></div>
-    <div class="card"><div class="label">Emergency Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.emergency}</div></div>
+    <div class="card"><div class="label">Inflation Rate</div><div class="value" style="font-size:1.1rem">${(INFLATION_ANNUAL * 100).toFixed(0)}%/yr</div></div>
     <div class="card"><div class="label">401K Unlocks (59½)</div><div class="value" style="font-size:1.1rem">2038-12</div></div>
-    <div class="card"><div class="label">401K Depleted</div><div class="value" style="font-size:1.1rem">${data.depletions.trad401k}</div></div>
   `;
 }
 

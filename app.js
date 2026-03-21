@@ -7,6 +7,7 @@ const SCENARIOS = {
 const EXPENSES_MO = 8269;
 const EXPENSES_APR = 8048; // COBRA month
 const INFLATION_ANNUAL = 0.03;
+const BF_MULTIPLIER = 2.0; // Black Friday bump applied to December gross
 const MONTHS_DEFAULT = 120;
 const START_YEAR = 2026;
 const START_MONTH = 4; // April
@@ -97,8 +98,9 @@ function simulate(scenarioKey) {
     const draws = {};
     SOURCES.forEach(s => { draws[s.key] = 0; });
 
-    // 1. Academy comp
-    const academyDraw = Math.min(compMo, remaining);
+    // 1. Academy comp (December gets Black Friday multiplier)
+    const effectiveComp = (mo === 12) ? sc.grossMo * BF_MULTIPLIER * sc.compRate : compMo;
+    const academyDraw = Math.min(effectiveComp, remaining);
     draws.academy = academyDraw;
     remaining -= academyDraw;
 

@@ -103,7 +103,7 @@ function simulate(scenarioKey) {
     }
 
     // 3-7. Remaining sources (respect unlock dates)
-    const drawOrder = ['hsa', 'rothContrib', 'rothRollover', 'rothLadder', 'family', 'emergency', 'rothEarnings', 'trad401k'];
+    const drawOrder = ['hsa', 'rothContrib', 'rothRollover', 'rothLadder', 'family', 'rothEarnings', 'trad401k', 'emergency'];
     for (const key of drawOrder) {
       if (remaining <= 0) break;
       const src = SOURCES.find(s => s.key === key);

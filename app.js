@@ -403,7 +403,7 @@ function setScenario(key) {
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#ccc', padding: 14, font: { size: 13 } } },
+        legend: { position: 'right', labels: { color: '#ccc', padding: 12, font: { size: 13 }, boxWidth: 14 } },
         tooltip: {
           callbacks: {
             label: function(ctx) {

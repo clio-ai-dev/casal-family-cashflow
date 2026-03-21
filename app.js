@@ -10,7 +10,7 @@ const START_YEAR = 2026;
 const START_MONTH = 4; // April
 
 const SOURCES = [
-  { key: 'academy',      label: 'Academy Comp',       color: '#22c55e', initial: 0,      growth: 0,     maxDraw: Infinity },
+  { key: 'academy',      label: "Owner's Comp",        color: '#22c55e', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'beyondsoft',   label: 'Beyondsoft Final',    color: '#14b8a6', initial: 4000,   growth: 0,     maxDraw: 4000 },
   { key: 'hsa',          label: 'HSA Reimbursements',  color: '#3b82f6', initial: 56497,  growth: 0.07,  maxDraw: 50000 },
   { key: 'rothContrib',  label: 'Roth Contributions',  color: '#a855f7', initial: 34500,  growth: 0.07,  maxDraw: Infinity },
@@ -119,7 +119,7 @@ function renderSummary(data) {
   const cards = document.getElementById('summary-cards');
   cards.innerHTML = `
     <div class="card"><div class="label">Monthly Expenses</div><div class="value">$${data.expenses.toLocaleString()}</div></div>
-    <div class="card"><div class="label">Academy Comp</div><div class="value green">$${data.compMo.toLocaleString()}</div></div>
+    <div class="card"><div class="label">Owner's Comp (${Math.round(SCENARIOS[currentScenario].compRate * 100)}%)</div><div class="value green">$${data.compMo.toLocaleString()}</div><div class="detail">${Math.round(SCENARIOS[currentScenario].compRate * 100)}% of $${SCENARIOS[currentScenario].grossMo.toLocaleString()}/mo gross</div></div>
     <div class="card"><div class="label">Monthly Gap</div><div class="value ${surplus ? 'green' : 'orange'}">$${Math.abs(gap).toLocaleString()}${surplus ? ' surplus' : ''}</div></div>
     <div class="card"><div class="label">Total Runway</div><div class="value ${data.runwayMonths >= 120 ? 'green' : data.runwayMonths >= 60 ? 'orange' : 'red'}">${data.runwayMonths >= 120 ? '10+ years' : yrs + ' years'}</div>
       <div class="detail">${data.runwayMonths >= 120 ? 'Indefinite at this rate' : data.runwayMonths + ' months'}</div></div>
@@ -131,10 +131,22 @@ function renderSummary(data) {
 }
 
 function renderSourceChart(data) {
-  const labels = data.rows.map(r => r.label);
+  // Aggregate to quarterly for readability
+  const quarters = [];
+  for (let i = 0; i < data.rows.length; i += 3) {
+    const chunk = data.rows.slice(i, i + 3);
+    const label = chunk[0].label;
+    const draws = {};
+    SOURCES.forEach(s => { draws[s.key] = 0; });
+    chunk.forEach(r => { SOURCES.forEach(s => { draws[s.key] += r.draws[s.key]; }); });
+    // Average per month for the quarter
+    SOURCES.forEach(s => { draws[s.key] = Math.round(draws[s.key] / chunk.length); });
+    quarters.push({ label, draws });
+  }
+  const labels = quarters.map(q => q.label);
   const datasets = SOURCES.map(s => ({
     label: s.label,
-    data: data.rows.map(r => Math.round(r.draws[s.key])),
+    data: quarters.map(q => q.draws[s.key]),
     backgroundColor: s.color,
     borderWidth: 0
   }));
@@ -159,8 +171,8 @@ function renderSourceChart(data) {
           stacked: true,
           ticks: {
             color: '#666',
-            maxTicksLimit: 24,
-            callback: function(val, idx) { return idx % 6 === 0 ? this.getLabelForValue(val) : ''; }
+            maxTicksLimit: 20,
+            callback: function(val, idx) { return idx % 4 === 0 ? this.getLabelForValue(val) : ''; }
           },
           grid: { color: '#1f222c' }
         },

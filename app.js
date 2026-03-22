@@ -30,7 +30,7 @@ const ROTH_LADDER_SEASONING = 60;  // 5 years until accessible
 
 // Social Security
 const SS_START_MONTH = (2046 - START_YEAR) * 12 + (10 - START_MONTH); // Oct 2046 = Julio turns 67 (FRA)
-const SS_MONTHLY = 2500; // Conservative estimate based on earnings history
+const SS_MONTHLY = 2631; // SSA statement Mar 2026 (at FRA 67) // Conservative estimate based on earnings history
 
 const SOURCES = [
   { key: 'academy',      label: "Owner's Comp",        color: '#22c55e', initial: 0,      growth: 0,     maxDraw: Infinity },
@@ -296,7 +296,7 @@ function renderSourceChart(data) {
   // Build source legend (2-column grid, same as draw order)
   const srcDescs = {
     academy:      "Academy take-home (65% of gross). 2x in December for Black Friday.",
-    socialSecurity: "Estimated $2,500/mo starting age 67 (Oct 2046).",
+    socialSecurity: "Estimated $2,631/mo starting age 67 (Oct 2046).",
     beyondsoft:   "Final paycheck, April 2026 only.",
     hsa:          "$50K max draws, grows at 7%.",
     rothContrib:  "$41.5K basis pre-59½, full balance after.",
@@ -523,7 +523,7 @@ function renderDrawOrder(data) {
   // Build HTML legend with descriptions matching Monthly Income Sources
   const sourceDescs = {
     academy:      "Academy take-home (65% of gross). 2x in December for Black Friday.",
-    socialSecurity: "Estimated $2,500/mo starting age 67 (Oct 2046).",
+    socialSecurity: "Estimated $2,631/mo starting age 67 (Oct 2046).",
     beyondsoft:   "Final paycheck, April 2026 only.",
     hsa:          "$50K max draws, grows at 7%.",
     rothContrib:  "$41.5K basis pre-59½, full balance after.",

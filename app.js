@@ -163,7 +163,9 @@ function simulate(scenarioKey) {
 
     const covered = remaining <= 0;
     draws.socialSecurity = ssDraw;
-    rows.push({ label, expenses, draws, remaining: Math.max(0, remaining), covered });
+    // Total available funds across all accounts
+    const totalBal = SOURCES.reduce((sum, s) => sum + bal[s.key], 0);
+    rows.push({ label, expenses, draws, remaining: Math.max(0, remaining), covered, totalBal });
     balHistory.push({
       label,
       hsa: bal.hsa,
@@ -225,6 +227,21 @@ function renderSourceChart(data) {
     data: data.rows.map(r => r.draws.socialSecurity || 0),
     backgroundColor: '#8b5cf6',
     borderWidth: 0
+  });
+
+  // Add total available funds line (right Y axis)
+  datasets.push({
+    label: 'Total Available Funds',
+    data: data.rows.map(r => Math.round(r.totalBal)),
+    type: 'line',
+    yAxisID: 'y2',
+    borderColor: '#ffffff',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    pointRadius: 0,
+    tension: 0.3,
+    fill: false,
+    order: -1
   });
 
   // Find month indices for markers
@@ -313,6 +330,12 @@ function renderSourceChart(data) {
           stacked: true,
           ticks: { color: '#666', callback: v => '$' + (v/1000).toFixed(0) + 'K' },
           grid: { color: '#1f222c' }
+        },
+        y2: {
+          position: 'right',
+          ticks: { color: '#888', callback: v => '$' + (v/1000000).toFixed(1) + 'M' },
+          grid: { display: false },
+          title: { display: true, text: 'Total Funds', color: '#888' }
         }
       }
     }

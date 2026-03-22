@@ -363,10 +363,9 @@ function renderSourceChart(data) {
   const srcLegend = document.getElementById('sourceLegend');
   if (srcLegend) {
     const items = SOURCES.filter(s => srcDescs[s.key]);
-    // Insert Social Security after academy
+    // Insert Social Security at end (passive income, not a draw choice)
     const ssItem = { key: 'socialSecurity', label: 'Social Security', color: '#8b5cf6' };
-    const acIdx = items.findIndex(s => s.key === 'academy');
-    items.splice(acIdx + 1, 0, ssItem);
+    items.push(ssItem);
     const half = Math.ceil(items.length / 2);
     let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px">';
     for (let i = 0; i < half; i++) {
@@ -546,10 +545,9 @@ function renderDrawOrder(data) {
 
   // Sum total draws per source across all months
   const sourceOrder = [...SOURCES];
-  // Insert Social Security after academy
+  // Insert Social Security at end (it's passive income starting age 67, not a draw choice)
   const ssSource = { key: 'socialSecurity', label: 'Social Security', color: '#8b5cf6' };
-  const acOrdIdx = sourceOrder.findIndex(s => s.key === 'academy');
-  sourceOrder.splice(acOrdIdx + 1, 0, ssSource);
+  sourceOrder.push(ssSource);
   const totals = {};
   sourceOrder.forEach(s => { totals[s.key] = 0; });
   data.rows.forEach(r => {

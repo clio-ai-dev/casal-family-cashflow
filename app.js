@@ -4,8 +4,8 @@ const SCENARIOS = {
   optimistic:  { label: 'Optimistic',  grossMo: 15000, compRate: 0.65 }
 };
 
-const EXPENSES_MO = 7507;
-const EXPENSES_APR = 7286; // COBRA month
+const EXPENSES_MO = 8000;
+const EXPENSES_APR = 7779; // COBRA month
 const INFLATION_ANNUAL = 0.03;
 const BF_MULTIPLIER = 2.0; // Black Friday bump applied to December gross
 const MONTHS_DEFAULT = 120;
@@ -725,6 +725,7 @@ function renderDrawOrder(data) {
     { label: 'Yessenia Allowance',    value: 500,  color: '#a855f7' },
     { label: '529 Contributions',     value: 460,  color: '#06b6d4' },
     { label: 'Clothing & Gifts',      value: 200,  color: '#f97316' },
+    { label: 'Unexpected / Buffer',   value: 493,  color: '#6b7280' },
   ];
   new Chart(ctx, {
     type: 'doughnut',

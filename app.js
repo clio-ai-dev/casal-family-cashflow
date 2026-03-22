@@ -457,6 +457,26 @@ function renderBalanceChart(data) {
         }
       },
       scales: {
+        x: {
+          stacked: true,
+          ticks: {
+            color: '#666',
+            maxTicksLimit: 20,
+            callback: function(val, idx) { return idx % 12 === 0 ? this.getLabelForValue(val) : ''; }
+          },
+          grid: { color: '#1f222c', display: false }
+        },
+        y: {
+          stacked: true,
+          ticks: { color: '#666', callback: v => '$' + (v/1000).toFixed(0) + 'K' },
+          grid: { color: '#1f222c' }
+        }
+      }
+    }
+  });
+}
+
+function renderTable(data) {
   const srcKeys = SOURCES.map(s => s.key);
   let html = '<table><thead><tr><th>Period</th><th>Expenses</th><th>Academy</th>';
   html += '<th>Beyondsoft</th><th>HSA</th><th>Julio\'s Roth</th><th>Roth Rollover</th>';

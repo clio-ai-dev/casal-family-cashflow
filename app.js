@@ -4,8 +4,8 @@ const SCENARIOS = {
   optimistic:  { label: 'Optimistic',  grossMo: 15000, compRate: 0.65 }
 };
 
-const EXPENSES_MO = 8347;
-const EXPENSES_APR = 8126; // COBRA month
+const EXPENSES_MO = 7507;
+const EXPENSES_APR = 7286; // COBRA month
 const INFLATION_ANNUAL = 0.03;
 const BF_MULTIPLIER = 2.0; // Black Friday bump applied to December gross
 const MONTHS_DEFAULT = 120;
@@ -722,9 +722,9 @@ function renderDrawOrder(data) {
     { label: 'Groceries & Gas',       value: 1192, color: '#22c55e' },
     { label: 'ACA Health + Dental',   value: 2221, color: '#ef4444' },
     { label: 'Sinking Fund',          value: 1070, color: '#eab308' },
-    { label: 'Yessenia Allowance',    value: 1160, color: '#a855f7' },
+    { label: 'Yessenia Allowance',    value: 500,  color: '#a855f7' },
     { label: '529 Contributions',     value: 460,  color: '#06b6d4' },
-    { label: 'Clothing & Gifts',      value: 380,  color: '#f97316' },
+    { label: 'Clothing & Gifts',      value: 200,  color: '#f97316' },
   ];
   new Chart(ctx, {
     type: 'doughnut',

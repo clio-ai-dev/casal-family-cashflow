@@ -163,8 +163,12 @@ function simulate(scenarioKey) {
 
     const covered = remaining <= 0;
     draws.socialSecurity = ssDraw;
-    // Total available funds across all accounts
-    const totalBal = SOURCES.reduce((sum, s) => sum + bal[s.key], 0);
+    // Total available funds across all accounts (including unseasoned ladder)
+    const unseasonedLadder = ladderConversions.reduce((sum, c) => {
+      if (m >= c.month && m < c.month + ROTH_LADDER_SEASONING) return sum + c.amount;
+      return sum;
+    }, 0);
+    const totalBal = SOURCES.reduce((sum, s) => sum + bal[s.key], 0) + unseasonedLadder;
     rows.push({ label, expenses, draws, remaining: Math.max(0, remaining), covered, totalBal });
     balHistory.push({
       label,

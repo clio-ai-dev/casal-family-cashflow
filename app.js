@@ -28,6 +28,10 @@ const ROTH_LADDER_ANNUAL = 50000; // Annual conversion from Trad IRA → Roth
 const ROTH_LADDER_START_MONTH = 0; // Start converting immediately (Apr 2026)
 const ROTH_LADDER_SEASONING = 60;  // 5 years until accessible
 
+// Social Security
+const SS_START_MONTH = (2046 - START_YEAR) * 12 + (10 - START_MONTH); // Oct 2046 = Julio turns 67 (FRA)
+const SS_MONTHLY = 2500; // Conservative estimate based on earnings history
+
 const SOURCES = [
   { key: 'academy',      label: "Owner's Comp",        color: '#22c55e', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'beyondsoft',   label: 'Beyondsoft Final',    color: '#14b8a6', initial: 4000,   growth: 0,     maxDraw: 4000 },
@@ -107,7 +111,14 @@ function simulate(scenarioKey) {
     draws.academy = academyDraw;
     remaining -= academyDraw;
 
-    // 2. Beyondsoft (month 0 only)
+    // 2. Social Security (starting at FRA age 67)
+    let ssDraw = 0;
+    if (m >= SS_START_MONTH && remaining > 0) {
+      ssDraw = Math.min(SS_MONTHLY, remaining);
+      remaining -= ssDraw;
+    }
+
+    // 3. Beyondsoft (month 0 only)
     if (m === 0 && remaining > 0) {
       const bDraw = Math.min(bal.beyondsoft, remaining);
       draws.beyondsoft = bDraw;
@@ -143,6 +154,7 @@ function simulate(scenarioKey) {
     }
 
     const covered = remaining <= 0;
+    draws.socialSecurity = ssDraw;
     rows.push({ label, expenses, draws, remaining: Math.max(0, remaining), covered });
     balHistory.push({
       label,
@@ -198,6 +210,14 @@ function renderSourceChart(data) {
     backgroundColor: s.color,
     borderWidth: 0
   }));
+
+  // Add Social Security dataset
+  datasets.splice(1, 0, {
+    label: 'Social Security',
+    data: data.rows.map(r => r.draws.socialSecurity || 0),
+    backgroundColor: '#8b5cf6',
+    borderWidth: 0
+  });
 
   // Find month index for 59½ marker
   const unlockIdx = data.rows.findIndex(r => r.label >= '2038-12');
@@ -276,6 +296,7 @@ function renderSourceChart(data) {
   // Build source legend (2-column grid, same as draw order)
   const srcDescs = {
     academy:      "Academy take-home (65% of gross). 2x in December for Black Friday.",
+    socialSecurity: "Estimated $2,500/mo starting age 67 (Oct 2046).",
     beyondsoft:   "Final paycheck, April 2026 only.",
     hsa:          "$50K max draws, grows at 7%.",
     rothContrib:  "$41.5K basis pre-59½, full balance after.",
@@ -290,6 +311,10 @@ function renderSourceChart(data) {
   const srcLegend = document.getElementById('sourceLegend');
   if (srcLegend) {
     const items = SOURCES.filter(s => srcDescs[s.key]);
+    // Insert Social Security after academy
+    const ssItem = { key: 'socialSecurity', label: 'Social Security', color: '#8b5cf6' };
+    const acIdx = items.findIndex(s => s.key === 'academy');
+    items.splice(acIdx + 1, 0, ssItem);
     const half = Math.ceil(items.length / 2);
     let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px">';
     for (let i = 0; i < half; i++) {
@@ -451,7 +476,11 @@ function renderDrawOrder(data) {
   if (drawOrderChart) drawOrderChart.destroy();
 
   // Sum total draws per source across all months
-  const sourceOrder = SOURCES;
+  const sourceOrder = [...SOURCES];
+  // Insert Social Security after academy
+  const ssSource = { key: 'socialSecurity', label: 'Social Security', color: '#8b5cf6' };
+  const acOrdIdx = sourceOrder.findIndex(s => s.key === 'academy');
+  sourceOrder.splice(acOrdIdx + 1, 0, ssSource);
   const totals = {};
   sourceOrder.forEach(s => { totals[s.key] = 0; });
   data.rows.forEach(r => {
@@ -494,6 +523,7 @@ function renderDrawOrder(data) {
   // Build HTML legend with descriptions matching Monthly Income Sources
   const sourceDescs = {
     academy:      "Academy take-home (65% of gross). 2x in December for Black Friday.",
+    socialSecurity: "Estimated $2,500/mo starting age 67 (Oct 2046).",
     beyondsoft:   "Final paycheck, April 2026 only.",
     hsa:          "$50K max draws, grows at 7%.",
     rothContrib:  "$41.5K basis pre-59½, full balance after.",

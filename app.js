@@ -28,6 +28,12 @@ const ROTH_LADDER_ANNUAL = 50000; // Annual conversion from Trad IRA → Roth
 const ROTH_LADDER_START_MONTH = 0; // Start converting immediately (Apr 2026)
 const ROTH_LADDER_SEASONING = 60;  // 5 years until accessible
 
+// Medicare
+const HEALTHCARE_CURRENT = 2221; // Kaiser $1,980 + Delta $241
+const HEALTHCARE_MEDICARE = 800; // ~$400/person × 2 (Part B + Medigap + Part D)
+const MEDICARE_SAVINGS = HEALTHCARE_CURRENT - HEALTHCARE_MEDICARE; // ~$1,421/mo in 2026 dollars
+const MEDICARE_START_MONTH = (2044 - START_YEAR) * 12 + (6 - START_MONTH); // Jun 2044 (Julio turns 65)
+
 // Social Security
 const SS_START_MONTH = (2046 - START_YEAR) * 12 + (10 - START_MONTH); // Oct 2046 = Julio turns 67 (FRA)
 const SS_MONTHLY = 2631; // SSA statement Mar 2026 (at FRA 67) // Conservative estimate based on earnings history
@@ -70,7 +76,9 @@ function simulate(scenarioKey) {
     const yr = START_YEAR + Math.floor((START_MONTH - 1 + m) / 12);
     const mo = ((START_MONTH - 1 + m) % 12) + 1;
     const label = `${yr}-${String(mo).padStart(2, '0')}`;
-    const expenses = (m === 0 ? EXPENSES_APR : EXPENSES_MO) * Math.pow(1 + INFLATION_ANNUAL / 12, m);
+    const baseExpenses = m === 0 ? EXPENSES_APR : EXPENSES_MO;
+    const medicareSavings = m >= MEDICARE_START_MONTH ? MEDICARE_SAVINGS : 0;
+    const expenses = (baseExpenses - medicareSavings) * Math.pow(1 + INFLATION_ANNUAL / 12, m);
 
     // Grow invested balances (beginning of month)
     SOURCES.forEach(s => {
@@ -219,9 +227,10 @@ function renderSourceChart(data) {
     borderWidth: 0
   });
 
-  // Find month index for 59½ marker
+  // Find month indices for markers
   const unlockIdx = data.rows.findIndex(r => r.label >= '2038-12');
   const unlockIdxY = data.rows.findIndex(r => r.label >= '2038-04');
+  const medicareIdx = data.rows.findIndex(r => r.label >= '2044-06');
 
   const ctx = document.getElementById('sourceChart').getContext('2d');
   if (sourceChart) sourceChart.destroy();
@@ -267,6 +276,22 @@ function renderSourceChart(data) {
                 content: '59½ (J)',
                 position: 'start',
                 backgroundColor: '#ec489980',
+                color: '#fff',
+                font: { size: 11 }
+              }
+            },
+            medicareLine: {
+              type: 'line',
+              xMin: medicareIdx,
+              xMax: medicareIdx,
+              borderColor: '#10b981',
+              borderWidth: 2,
+              borderDash: [6, 4],
+              label: {
+                display: true,
+                content: '🏥 Medicare (Jun 2044)',
+                position: 'end',
+                backgroundColor: '#10b98180',
                 color: '#fff',
                 font: { size: 11 }
               }
@@ -362,6 +387,7 @@ function renderBalanceChart(data) {
 
   const unlockIdx = labels.indexOf('2038-12');
   const unlockIdxY = labels.indexOf('2038-04');
+  const medicareBalIdx = labels.indexOf('2044-06');
 
   const ctx = document.getElementById('balanceChart').getContext('2d');
   if (balanceChart) balanceChart.destroy();
@@ -410,31 +436,27 @@ function renderBalanceChart(data) {
                 color: '#fff',
                 font: { size: 11 }
               }
+            },
+            medicareBalLine: {
+              type: 'line',
+              xMin: medicareBalIdx,
+              xMax: medicareBalIdx,
+              borderColor: '#10b981',
+              borderWidth: 2,
+              borderDash: [6, 4],
+              label: {
+                display: true,
+                content: '🏥 Medicare (Jun 2044)',
+                position: 'end',
+                backgroundColor: '#10b98180',
+                color: '#fff',
+                font: { size: 11 }
+              }
             }
           }
         }
       },
       scales: {
-        x: {
-          stacked: true,
-          ticks: {
-            color: '#666',
-            maxTicksLimit: 20,
-            callback: function(val, idx) { return idx % 12 === 0 ? this.getLabelForValue(val) : ''; }
-          },
-          grid: { color: '#1f222c', display: false }
-        },
-        y: {
-          stacked: true,
-          ticks: { color: '#666', callback: v => '$' + (v/1000).toFixed(0) + 'K' },
-          grid: { color: '#1f222c' }
-        }
-      }
-    }
-  });
-}
-
-function renderTable(data) {
   const srcKeys = SOURCES.map(s => s.key);
   let html = '<table><thead><tr><th>Period</th><th>Expenses</th><th>Academy</th>';
   html += '<th>Beyondsoft</th><th>HSA</th><th>Julio\'s Roth</th><th>Roth Rollover</th>';

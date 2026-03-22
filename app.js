@@ -289,7 +289,7 @@ function renderSourceChart(data) {
               borderDash: [6, 4],
               label: {
                 display: true,
-                content: '🏥 Medicare (Jun 2044)',
+                content: 'Medicare',
                 position: 'end',
                 backgroundColor: '#10b98180',
                 color: '#fff',
@@ -446,7 +446,7 @@ function renderBalanceChart(data) {
               borderDash: [6, 4],
               label: {
                 display: true,
-                content: '🏥 Medicare (Jun 2044)',
+                content: 'Medicare',
                 position: 'end',
                 backgroundColor: '#10b98180',
                 color: '#fff',

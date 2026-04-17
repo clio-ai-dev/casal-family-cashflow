@@ -572,6 +572,7 @@ function onSnapshotChange(snapshotKey) {
   const snap = SNAPSHOTS[snapshotKey];
   const subtitleEl = document.getElementById('snapshot-date');
   if (subtitleEl) subtitleEl.textContent = 'Data as of ' + snap.date;
+  renderAssetMap();
   setScenario(currentScenario);
 }
 
@@ -674,11 +675,8 @@ function renderDrawOrder(data) {
 }
 
 // Asset Map — visual bucket diagram
-(function renderAssetMap() {
-  const el = document.getElementById('assetMap');
-  if (!el) return;
-
-  const buckets = [
+const ASSET_MAP_SNAPSHOTS = {
+  'march-2026': [
     { label: '.NET Academy', sub: '$6K/mo pessimistic', amount: '', color: '#22c55e', height: 80, type: 'income' },
     { label: 'HSA', sub: '$50K max draws', amount: '$56K', color: '#3b82f6', height: 70 },
     { label: "Julio's Roth IRA", sub: '$41.5K basis', amount: '$67K', color: '#a855f7', height: 75 },
@@ -691,11 +689,29 @@ function renderDrawOrder(data) {
         { label: 'Roth Contrib', amount: '$135K', color: '#f97316', height: 50 },
       ]
     },
-    { label: 'Family Taxable', sub: 'FZROX + MSFT', amount: '$133K', color: '#eab308', height: 110 },
+    { label: 'Family Taxable', sub: 'FZROX', amount: '$133K', color: '#eab308', height: 110 },
     { label: 'Emergency Fund', sub: 'Last resort', amount: '$60K', color: '#ef4444', height: 70 },
     { label: 'Solo 401K', sub: 'Locked until 59½', amount: '$25K', color: '#fb7185', height: 50 },
     { label: '529 Plans', sub: '3 kids', amount: '$68K', color: '#06b6d4', height: 75 },
-  ];
+  ],
+  'april-2026': [
+    { label: '.NET Academy', sub: '$6K/mo pessimistic', amount: '', color: '#22c55e', height: 80, type: 'income' },
+    { label: 'HSA', sub: '$50K max draws', amount: '$62K', color: '#3b82f6', height: 75 },
+    { label: "Julio's Roth IRA", sub: '$41.5K basis', amount: '$547K', color: '#a855f7', height: 160 },
+    { label: "Yessenia's Roth IRA", sub: '$37.5K basis', amount: '$59K', color: '#d946ef', height: 70 },
+    { label: "Julio's Trad IRA", sub: '$50K/yr → Roth', amount: '$429K', color: '#9ca3af', height: 130, type: 'passthrough' },
+    { label: 'Family Taxable', sub: 'FZROX', amount: '$147K', color: '#eab308', height: 115 },
+    { label: 'Emergency Fund', sub: 'Last resort', amount: '$60K', color: '#ef4444', height: 70 },
+    { label: 'Solo 401K', sub: 'Locked until 59½', amount: '$27K', color: '#fb7185', height: 52 },
+    { label: '529 Plans', sub: '3 kids', amount: '$70K', color: '#06b6d4', height: 75 },
+  ]
+};
+
+function renderAssetMap() {
+  const el = document.getElementById('assetMap');
+  if (!el) return;
+
+  const buckets = ASSET_MAP_SNAPSHOTS[currentSnapshot] || ASSET_MAP_SNAPSHOTS['april-2026'];
 
   const bw = 100, gap = 14, pad = 20;
   const totalW = buckets.length * (bw + gap) - gap + pad * 2;
@@ -743,24 +759,36 @@ function renderDrawOrder(data) {
     x += bw + gap;
   });
 
-  // Flow arrow: Trad IRA → Roth ladder (bucket 4 to bucket 2)
-  const tradX = pad + 4 * (bw + gap) + bw/2;
-  const tradY = baseY - 60;
-  const julioRothX = pad + 2 * (bw + gap) + bw/2;
-  const julioRothY = baseY - 75 - 10;
+  // Flow arrows depend on snapshot
   svg += `<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#9ca3af"/></marker></defs>`;
-  svg += `<path d="M${tradX},${tradY - 15} C${tradX - 30},${tradY - 60} ${julioRothX + 40},${julioRothY - 30} ${julioRothX + 10},${julioRothY}" stroke="#9ca3af" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>`;
-  svg += `<text x="${(tradX + julioRothX)/2}" y="${tradY - 50}" text-anchor="middle" fill="#9ca3af" font-size="9">$50K/yr</text>`;
 
-  // Flow arrow: MSFT Pre-Tax → Trad IRA
-  const msftX = pad + 5 * (bw + gap) + bw/2;
-  const msftY = baseY - 180;
-  svg += `<path d="M${msftX - bw/2 - 5},${msftY + 35} L${tradX + bw/2 + 5},${tradY - 10}" stroke="#ec4899" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>`;
-  svg += `<text x="${(msftX + tradX)/2 - 10}" y="${(msftY + tradY)/2 - 5}" text-anchor="middle" fill="#ec4899" font-size="9">rollover</text>`;
+  if (currentSnapshot === 'april-2026') {
+    // Trad IRA (index 4) → Julio's Roth IRA (index 2)
+    const tradIdx = 4, rothIdx = 2;
+    const tradX2 = pad + tradIdx * (bw + gap) + bw/2;
+    const tradY2 = baseY - 130;
+    const julioRothX2 = pad + rothIdx * (bw + gap) + bw/2;
+    const julioRothY2 = baseY - 160 - 10;
+    svg += `<path d="M${tradX2},${tradY2 - 15} C${tradX2 - 30},${tradY2 - 60} ${julioRothX2 + 40},${julioRothY2 - 30} ${julioRothX2 + 10},${julioRothY2}" stroke="#9ca3af" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>`;
+    svg += `<text x="${(tradX2 + julioRothX2)/2}" y="${tradY2 - 50}" text-anchor="middle" fill="#9ca3af" font-size="9">$50K/yr</text>`;
+  } else {
+    // March: Trad IRA (index 4) → Julio's Roth IRA (index 2)
+    const tradX = pad + 4 * (bw + gap) + bw/2;
+    const tradY = baseY - 60;
+    const julioRothX = pad + 2 * (bw + gap) + bw/2;
+    const julioRothY = baseY - 75 - 10;
+    svg += `<path d="M${tradX},${tradY - 15} C${tradX - 30},${tradY - 60} ${julioRothX + 40},${julioRothY - 30} ${julioRothX + 10},${julioRothY}" stroke="#9ca3af" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>`;
+    svg += `<text x="${(tradX + julioRothX)/2}" y="${tradY - 50}" text-anchor="middle" fill="#9ca3af" font-size="9">$50K/yr</text>`;
+    // MSFT → Trad IRA rollover arrow
+    const msftX = pad + 5 * (bw + gap) + bw/2;
+    const msftY = baseY - 180;
+    svg += `<path d="M${msftX - bw/2 - 5},${msftY + 35} L${tradX + bw/2 + 5},${tradY - 10}" stroke="#ec4899" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>`;
+    svg += `<text x="${(msftX + tradX)/2 - 10}" y="${(msftY + tradY)/2 - 5}" text-anchor="middle" fill="#ec4899" font-size="9">rollover</text>`;
+  }
 
   svg += '</svg>';
   el.innerHTML = svg;
-})();
+}
 
 // Expense breakdown pie chart
 (function renderExpensePie() {
@@ -807,4 +835,5 @@ function renderDrawOrder(data) {
 })();
 
 // Initial render
+renderAssetMap();
 setScenario('pessimistic');

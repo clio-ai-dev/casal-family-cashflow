@@ -152,7 +152,7 @@ function simulate(scenarioKey) {
     // Fill expenses from sources in order
     let remaining = expenses;
     const draws = {};
-    SOURCES.forEach(s => { draws[s.key] = 0; });
+    sources.forEach(s => { draws[s.key] = 0; });
 
     // 1. Academy comp (December gets Black Friday multiplier)
     const effectiveComp = (mo === 12) ? sc.grossMo * BF_MULTIPLIER * sc.compRate : compMo;

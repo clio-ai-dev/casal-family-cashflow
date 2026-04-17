@@ -12,12 +12,20 @@
 <div class="container">
   <h1>Casal Family Cash Flow Projection</h1>
   <p class="subtitle">Expense Coverage Plan</p>
+  <p id="snapshot-date" style="color:#666;font-size:0.8rem;margin-top:-8px;margin-bottom:12px">Data as of April 17, 2026</p>
   
   <div class="controls">
     <div class="toggle-group">
       <button id="btn-pessimistic" class="toggle active" onclick="setScenario('pessimistic')">Pessimistic ($6K/mo)</button>
       <button id="btn-mid" class="toggle" onclick="setScenario('mid')">Mid ($10K/mo)</button>
       <button id="btn-optimistic" class="toggle" onclick="setScenario('optimistic')">Optimistic ($15K/mo)</button>
+    </div>
+    <div class="snapshot-selector toggle-group" style="align-items:center">
+      <label for="snapshot-select" style="color:#aaa;font-size:0.9rem;margin-right:0.5rem;">Snapshot:</label>
+      <select id="snapshot-select" onchange="onSnapshotChange(this.value)" style="padding:0.4rem 0.6rem;border-radius:6px;border:1px solid #333;background:#181a20;color:#fff;font-size:0.9rem;">
+        <option value="april-2026">April 2026 (Post-Rollover)</option>
+        <option value="march-2026">March 2026 (Original)</option>
+      </select>
     </div>
     <div class="toggle-group">
       <label for="end-year" style="color:#aaa;font-size:0.9rem;margin-right:0.5rem;">End Year:</label>
@@ -28,7 +36,7 @@
   <div class="summary-cards" id="summary-cards"></div>
 
   <div class="chart-section">
-    <h2>Monthly Expense Breakdown ($8,000)</h2>
+    <h2>Monthly Expense Breakdown ($8,269)</h2>
     <div style="max-width:520px;margin:0 auto"><canvas id="expenseChart"></canvas></div>
   </div>
 

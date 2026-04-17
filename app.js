@@ -4,8 +4,8 @@ const SCENARIOS = {
   optimistic:  { label: 'Optimistic',  grossMo: 15000, compRate: 0.65 }
 };
 
-const EXPENSES_MO = 8000;
-const EXPENSES_APR = 7779; // COBRA month
+const EXPENSES_MO = 8269; // Kaiser $1,980 + Delta $241 + other
+const EXPENSES_APR = 8269; // Kaiser active Apr 1, no COBRA
 const INFLATION_ANNUAL = 0.03;
 const BF_MULTIPLIER = 2.0; // Black Friday bump applied to December gross
 const MONTHS_DEFAULT = 120;
@@ -38,31 +38,72 @@ const MEDICARE_START_MONTH = (2044 - START_YEAR) * 12 + (6 - START_MONTH); // Ju
 const SS_START_MONTH = (2046 - START_YEAR) * 12 + (10 - START_MONTH); // Oct 2046 = Julio turns 67 (FRA)
 const SS_MONTHLY = 2631; // SSA statement Mar 2026 (at FRA 67) // Conservative estimate based on earnings history
 
-const SOURCES = [
+const SNAPSHOTS = {
+  'march-2026': {
+    label: 'March 2026 (Original)',
+    date: 'March 2026',
+    sources: {
+      hsa:          { initial: 56497, maxDraw: 50000 },
+      rothContrib:  { initial: 66790, basisCap: 41500 },
+      yesseniaRoth: { initial: 61149, basisCap: 37502 },
+      rothRollover: { initial: 433006, basisCap: 134388 },
+      family:       { initial: 133305 },
+      emergency:    { initial: 60000 },
+      trad401k:     { initial: 385554 },
+      solo401k:     { initial: 24665 }
+    }
+  },
+  'april-2026': {
+    label: 'April 2026 (Post-Rollover)',
+    date: 'April 17, 2026',
+    sources: {
+      hsa:          { initial: 62478, maxDraw: 50000 },
+      rothContrib:  { initial: 546663, basisCap: 41500 },
+      yesseniaRoth: { initial: 59475, basisCap: 37502 },
+      rothRollover: { initial: 546663, basisCap: 134388 },
+      family:       { initial: 147421 },
+      emergency:    { initial: 60153 },
+      trad401k:     { initial: 429154 },
+      solo401k:     { initial: 27117 }
+    }
+  }
+};
+
+function getSources(snapshotKey) {
+  const snap = SNAPSHOTS[snapshotKey];
+  return BASE_SOURCES.map(s => {
+    const override = snap.sources[s.key];
+    return override ? { ...s, ...override } : s;
+  });
+}
+
+const BASE_SOURCES = [
   { key: 'academy',      label: "Owner's Comp",        color: '#22c55e', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'beyondsoft',   label: 'Beyondsoft Final',    color: '#14b8a6', initial: 4000,   growth: 0,     maxDraw: 4000 },
-  { key: 'hsa',          label: 'HSA Reimbursements',  color: '#3b82f6', initial: 56497,  growth: 0.07,  maxDraw: 50000 },
-  { key: 'rothContrib',  label: "Julio's Roth IRA",  color: '#a855f7', initial: 66790,  growth: 0.07,  maxDraw: Infinity, basisCap: 41500 },
-  { key: 'yesseniaRoth', label: "Yessenia's Roth IRA", color: '#d946ef', initial: 61149,  growth: 0.07,  maxDraw: Infinity, basisCap: 37502, basisUnlock: UNLOCK_MONTH_YESSENIA },
-  { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 433006, growth: 0.07,  maxDraw: Infinity, basisCap: 134388 },
+  { key: 'hsa',          label: 'HSA Reimbursements',  color: '#3b82f6', initial: 62478,  growth: 0.07,  maxDraw: 50000 },
+  { key: 'rothContrib',  label: "Julio's Roth IRA",  color: '#a855f7', initial: 546663, growth: 0.07,  maxDraw: Infinity, basisCap: 41500 },
+  { key: 'yesseniaRoth', label: "Yessenia's Roth IRA", color: '#d946ef', initial: 59475,  growth: 0.07,  maxDraw: Infinity, basisCap: 37502, basisUnlock: UNLOCK_MONTH_YESSENIA },
+  { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 546663, growth: 0.07,  maxDraw: Infinity, basisCap: 134388 },
   { key: 'rothLadder',   label: 'Roth Ladder',         color: '#06b6d4', initial: 0,      growth: 0,     maxDraw: Infinity },
-  { key: 'family',       label: 'Family Taxable',        color: '#eab308', initial: 133305,  growth: 0.07,  maxDraw: Infinity },
-  { key: 'emergency',    label: 'Emergency Fund',      color: '#ef4444', initial: 60000,  growth: 0.04,  maxDraw: Infinity },
-  { key: 'trad401k',     label: 'Pre-Tax 401K (59½)',  color: '#ec4899', initial: 385554, growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K },
-  { key: 'solo401k',     label: 'Solo 401K (59½)',     color: '#fb7185', initial: 24665,  growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K }
+  { key: 'family',       label: 'Family Taxable',        color: '#eab308', initial: 147421,  growth: 0.07,  maxDraw: Infinity },
+  { key: 'emergency',    label: 'Emergency Fund',      color: '#ef4444', initial: 60153,  growth: 0.04,  maxDraw: Infinity },
+  { key: 'trad401k',     label: 'Traditional IRA (59½)', color: '#ec4899', initial: 429154, growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K },
+  { key: 'solo401k',     label: 'Solo 401K (59½)',     color: '#fb7185', initial: 27117,  growth: 0.07,  maxDraw: Infinity, unlocksAt: UNLOCK_MONTH_401K }
 ];
 
 let currentScenario = 'pessimistic';
+let currentSnapshot = 'april-2026';
 let sourceChart, balanceChart;
 
 function simulate(scenarioKey) {
   const sc = SCENARIOS[scenarioKey];
   const MONTHS = getMonths();
   const compMo = sc.grossMo * sc.compRate;
+  const sources = getSources(currentSnapshot);
 
   // Initialize balances
   const bal = {};
-  SOURCES.forEach(s => { bal[s.key] = s.initial; });
+  sources.forEach(s => { bal[s.key] = s.initial; });
   let hsaTotalDrawn = 0;
   const cumulativeDraws = {};
 
@@ -81,7 +122,7 @@ function simulate(scenarioKey) {
     const expenses = (baseExpenses - medicareSavings) * Math.pow(1 + INFLATION_ANNUAL / 12, m);
 
     // Grow invested balances (beginning of month)
-    SOURCES.forEach(s => {
+    sources.forEach(s => {
       if (s.growth > 0 && s.key !== 'academy' && s.key !== 'beyondsoft') {
         bal[s.key] *= (1 + s.growth / 12);
       }
@@ -138,7 +179,7 @@ function simulate(scenarioKey) {
     const drawOrder = ['hsa', 'rothContrib', 'yesseniaRoth', 'rothRollover', 'rothLadder', 'family', 'trad401k', 'solo401k', 'emergency'];
     for (const key of drawOrder) {
       if (remaining <= 0) break;
-      const src = SOURCES.find(s => s.key === key);
+      const src = sources.find(s => s.key === key);
       // Skip locked sources
       if (src.unlocksAt !== undefined && m < src.unlocksAt) continue;
       let available = bal[key];
@@ -168,7 +209,7 @@ function simulate(scenarioKey) {
       if (m >= c.month && m < c.month + ROTH_LADDER_SEASONING) return sum + c.amount;
       return sum;
     }, 0);
-    const totalBal = SOURCES.reduce((sum, s) => sum + bal[s.key], 0) + unseasonedLadder;
+    const totalBal = sources.reduce((sum, s) => sum + bal[s.key], 0) + unseasonedLadder;
     rows.push({ label, expenses, draws, remaining: Math.max(0, remaining), covered, totalBal });
     balHistory.push({
       label,
@@ -198,7 +239,7 @@ function simulate(scenarioKey) {
     depletions[key] = idx >= 0 ? rows[idx].label : 'Never';
   });
 
-  return { rows, balHistory, runwayMonths, depletions, compMo, expenses: EXPENSES_MO };
+  return { rows, balHistory, runwayMonths, depletions, compMo, expenses: EXPENSES_MO, snapshot: currentSnapshot };
 }
 
 function renderSummary(data) {
@@ -218,7 +259,8 @@ function renderSummary(data) {
 
 function renderSourceChart(data) {
   const labels = data.rows.map(r => r.label);
-  const datasets = SOURCES.map(s => ({
+  const sources = getSources(currentSnapshot);
+  const datasets = sources.map(s => ({
     label: s.label,
     data: data.rows.map(r => r.draws[s.key]),
     backgroundColor: s.color,
@@ -362,7 +404,7 @@ function renderSourceChart(data) {
   };
   const srcLegend = document.getElementById('sourceLegend');
   if (srcLegend) {
-    const items = SOURCES.filter(s => srcDescs[s.key]);
+    const items = getSources(currentSnapshot).filter(s => srcDescs[s.key]);
     // Insert Social Security at end (passive income, not a draw choice)
     const ssItem = { key: 'socialSecurity', label: 'Social Security', color: '#8b5cf6' };
     items.push(ssItem);
@@ -384,7 +426,7 @@ function renderSourceChart(data) {
 function renderBalanceChart(data) {
   const labels = data.balHistory.map((_, i) => data.rows[i].label);
   const balKeys = ['hsa','rothContrib','yesseniaRoth','rothRollover','rothLadder','family','emergency','trad401k','solo401k'];
-  const keys = balKeys.map(k => SOURCES.find(s => s.key === k)).filter(Boolean);
+  const keys = balKeys.map(k => getSources(currentSnapshot).find(s => s.key === k)).filter(Boolean);
 
   // Stacked area datasets
   const datasets = keys.map(k => ({
@@ -503,7 +545,7 @@ function renderBalanceChart(data) {
 }
 
 function renderTable(data) {
-  const srcKeys = SOURCES.map(s => s.key);
+  const srcKeys = getSources(currentSnapshot).map(s => s.key);
   let html = '<table><thead><tr><th>Period</th><th>Expenses</th><th>Academy</th>';
   html += '<th>Beyondsoft</th><th>HSA</th><th>Julio\'s Roth</th><th>Roth Rollover</th>';
   html += '<th>Roth Ladder</th><th>Family</th><th>Emergency</th><th>Pre-Tax 401K</th><th>Gap</th></tr></thead><tbody>';
@@ -522,6 +564,15 @@ function renderTable(data) {
 
   html += '</tbody></table>';
   document.getElementById('table-wrapper').innerHTML = html;
+}
+
+function onSnapshotChange(snapshotKey) {
+  currentSnapshot = snapshotKey;
+  // Update subtitle to reflect active snapshot
+  const snap = SNAPSHOTS[snapshotKey];
+  const subtitleEl = document.getElementById('snapshot-date');
+  if (subtitleEl) subtitleEl.textContent = 'Data as of ' + snap.date;
+  setScenario(currentScenario);
 }
 
 function setScenario(key) {
@@ -544,7 +595,7 @@ function renderDrawOrder(data) {
   if (drawOrderChart) drawOrderChart.destroy();
 
   // Sum total draws per source across all months
-  const sourceOrder = [...SOURCES];
+  const sourceOrder = [...getSources(currentSnapshot)];
   // Insert Social Security at end (it's passive income starting age 67, not a draw choice)
   const ssSource = { key: 'socialSecurity', label: 'Social Security', color: '#8b5cf6' };
   sourceOrder.push(ssSource);

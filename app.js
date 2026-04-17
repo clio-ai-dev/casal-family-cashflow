@@ -46,7 +46,7 @@ const SNAPSHOTS = {
       hsa:          { initial: 56497, maxDraw: 50000 },
       rothContrib:  { initial: 66790, basisCap: 41500 },
       yesseniaRoth: { initial: 61149, basisCap: 37502 },
-      rothRollover: { initial: 433006, basisCap: 134388 },
+      rothRollover: { initial: 0, basisCap: 134388 }, // virtual basis tranche of rothContrib
       family:       { initial: 133305 },
       emergency:    { initial: 60000 },
       trad401k:     { initial: 385554 },
@@ -60,7 +60,7 @@ const SNAPSHOTS = {
       hsa:          { initial: 62478, maxDraw: 50000 },
       rothContrib:  { initial: 546663, basisCap: 41500 },
       yesseniaRoth: { initial: 59475, basisCap: 37502 },
-      rothRollover: { initial: 546663, basisCap: 134388 },
+      rothRollover: { initial: 0, basisCap: 134388 }, // virtual basis tranche
       family:       { initial: 147421 },
       emergency:    { initial: 60153 },
       trad401k:     { initial: 429154 },
@@ -83,7 +83,7 @@ const BASE_SOURCES = [
   { key: 'hsa',          label: 'HSA Reimbursements',  color: '#3b82f6', initial: 62478,  growth: 0.07,  maxDraw: 50000 },
   { key: 'rothContrib',  label: "Julio's Roth IRA",  color: '#a855f7', initial: 546663, growth: 0.07,  maxDraw: Infinity, basisCap: 41500 },
   { key: 'yesseniaRoth', label: "Yessenia's Roth IRA", color: '#d946ef', initial: 59475,  growth: 0.07,  maxDraw: Infinity, basisCap: 37502, basisUnlock: UNLOCK_MONTH_YESSENIA },
-  { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 546663, growth: 0.07,  maxDraw: Infinity, basisCap: 134388 },
+  { key: 'rothRollover', label: 'Roth Rollover Basis', color: '#f97316', initial: 0, growth: 0,  maxDraw: Infinity, basisCap: 134388 }, // virtual tranche of rothContrib — tracks basis only, no separate growth
   { key: 'rothLadder',   label: 'Roth Ladder',         color: '#06b6d4', initial: 0,      growth: 0,     maxDraw: Infinity },
   { key: 'family',       label: 'Family Taxable',        color: '#eab308', initial: 147421,  growth: 0.07,  maxDraw: Infinity },
   { key: 'emergency',    label: 'Emergency Fund',      color: '#ef4444', initial: 60153,  growth: 0.04,  maxDraw: Infinity },
@@ -182,7 +182,7 @@ function simulate(scenarioKey) {
       const src = sources.find(s => s.key === key);
       // Skip locked sources
       if (src.unlocksAt !== undefined && m < src.unlocksAt) continue;
-      let available = bal[key];
+      let available = key === 'rothRollover' ? bal['rothContrib'] : bal[key];
       if (key === 'hsa') {
         available = Math.min(available, 50000 - hsaTotalDrawn);
       }
@@ -195,7 +195,12 @@ function simulate(scenarioKey) {
       const draw = Math.min(available, remaining);
       if (draw > 0) {
         draws[key] = draw;
-        bal[key] -= draw;
+        // rothRollover is a virtual tranche — actually deducts from rothContrib balance
+        if (key === 'rothRollover') {
+          bal['rothContrib'] -= draw;
+        } else {
+          bal[key] -= draw;
+        }
         if (key === 'hsa') hsaTotalDrawn += draw;
         cumulativeDraws[key] = (cumulativeDraws[key] || 0) + draw;
         remaining -= draw;

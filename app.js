@@ -106,6 +106,10 @@ function simulate(scenarioKey) {
   sources.forEach(s => { bal[s.key] = s.initial; });
   let hsaTotalDrawn = 0;
   const cumulativeDraws = {};
+  // Track rollover basis separately (rothRollover is virtual — draws from rothContrib)
+  const snapSrc = getSources(currentSnapshot);
+  const rothRolloverSrc = snapSrc.find(s => s.key === 'rothRollover');
+  let rolloverBasisRemaining = rothRolloverSrc ? (rothRolloverSrc.basisCap || 134388) : 134388;
 
   // Track Roth ladder conversions: array of { month, amount }
   const ladderConversions = [];
@@ -119,7 +123,8 @@ function simulate(scenarioKey) {
     const label = `${yr}-${String(mo).padStart(2, '0')}`;
     const baseExpenses = m === 0 ? EXPENSES_APR : EXPENSES_MO;
     const medicareSavings = m >= MEDICARE_START_MONTH ? MEDICARE_SAVINGS : 0;
-    const expenses = (baseExpenses - medicareSavings) * Math.pow(1 + INFLATION_ANNUAL / 12, m);
+    // Apply inflation to full base expenses, then subtract Medicare savings (fixed nominal benefit)
+    const expenses = baseExpenses * Math.pow(1 + INFLATION_ANNUAL / 12, m) - medicareSavings;
 
     // Grow invested balances (beginning of month)
     sources.forEach(s => {
@@ -144,8 +149,9 @@ function simulate(scenarioKey) {
 
     // Credit seasoned ladder conversions to rothLadder balance
     ladderConversions.forEach(c => {
-      if (m === c.month + ROTH_LADDER_SEASONING && c.amount > 0) {
+      if (!c.matured && m === c.month + ROTH_LADDER_SEASONING && c.amount > 0) {
         bal.rothLadder += c.amount;
+        c.matured = true;
       }
     });
 
@@ -195,9 +201,10 @@ function simulate(scenarioKey) {
       const draw = Math.min(available, remaining);
       if (draw > 0) {
         draws[key] = draw;
-        // rothRollover is a virtual tranche — actually deducts from rothContrib balance
+        // rothRollover is a virtual tranche — deducts from rothContrib balance AND tracks basis
         if (key === 'rothRollover') {
           bal['rothContrib'] -= draw;
+          rolloverBasisRemaining -= draw;
         } else {
           bal[key] -= draw;
         }
@@ -214,14 +221,16 @@ function simulate(scenarioKey) {
       if (m >= c.month && m < c.month + ROTH_LADDER_SEASONING) return sum + c.amount;
       return sum;
     }, 0);
-    const totalBal = sources.reduce((sum, s) => sum + bal[s.key], 0) + unseasonedLadder;
+    // Total available funds — asset accounts only (excludes income sources like academy/beyondsoft)
+    const assetKeys = ['hsa','rothContrib','yesseniaRoth','rothLadder','family','emergency','trad401k','solo401k'];
+    const totalBal = assetKeys.reduce((sum, k) => sum + (bal[k] || 0), 0) + unseasonedLadder;
     rows.push({ label, expenses, draws, remaining: Math.max(0, remaining), covered, totalBal });
     balHistory.push({
       label,
       hsa: bal.hsa,
       rothContrib: bal.rothContrib,
       yesseniaRoth: bal.yesseniaRoth,
-      rothRollover: bal.rothRollover,
+      rothRollover: rolloverBasisRemaining, // track remaining rollover basis, not bal.rothRollover (which is always 0)
       rothLadder: bal.rothLadder,
       family: bal.family,
       emergency: bal.emergency,
@@ -237,9 +246,9 @@ function simulate(scenarioKey) {
   // Find depletion months for each source
   const depletions = {};
   ['hsa', 'rothContrib', 'yesseniaRoth', 'rothRollover', 'rothLadder', 'family', 'emergency', 'trad401k'].forEach(key => {
-    const idx = rows.findIndex(r => {
-      if (key === 'hsa') return balHistory[rows.indexOf(r)].hsaDrawn >= 50000;
-      return balHistory[rows.indexOf(r)][key] < 1;
+    const idx = rows.findIndex((_, i) => {
+      if (key === 'hsa') return balHistory[i].hsaDrawn >= 50000;
+      return balHistory[i][key] < 1;
     });
     depletions[key] = idx >= 0 ? rows[idx].label : 'Never';
   });
